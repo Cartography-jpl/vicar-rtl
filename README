@@ -1,0 +1,13 @@
+This directory contains the code to build the VICAR RTL library. 
+
+In the original MIPL code, the libraries libp2, libp1, librtl, libshvic, and 
+libtae are separate libraries. However, they are never used except together. 
+As a convenience, we put them all into one library. We also call this library
+"libvicar_rtl" rather than "librtl" because there are other libraries 
+that use the same "librtl" library name. We also stuff libmath77 into this
+library, since again we don't need to use this library independently.
+
+This directory contains a configure and Makefile, which can be used to
+build just this code. However if you are building the full afids system, the
+top level Makefile contains everything and you don't need a separate build
+here.

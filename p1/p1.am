@@ -1,0 +1,111 @@
+# This is the automake file for compiling the p1 subroutines. This was
+# originally created by the file ../comunpack. All this did was go through
+# all of the imake files found in the various .com files and generate this
+# automake file. Feel free to edit this file if needed, or you can recreate
+# it using comunpack.
+
+# Install in normal library location
+noinst_LTLIBRARIES += libp1.la
+
+# Include files for p1
+vicarrtlinc_HEADERS+= @p1inc@/file_no_path.h @p1inc@/ibiserrs.h
+vicarrtlinc_HEADERS+= @p1inc@/ibisfile.h @p1inc@/mp_routines.h
+vicarrtlinc_HEADERS+= @p1inc@/p1proto.h
+
+libp1_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/$(rtlinc) -I$(srcdir)/$(p1inc) 
+libp1_la_CPPFLAGS+= -I$(srcdir)/$(taeinc)
+
+# gfortran needs this, g77 doesn't. There is additional error checking
+# under gfortran.
+if HAVE_G77
+  libp1_la_FFLAGS = $(AM_FFLAGS)
+else
+  libp1_la_FFLAGS = $(AM_FFLAGS) -fno-range-check
+endif
+
+EXTRA_DIST += @p1inc@/fortport
+EXTRA_DIST += @srcp1@/ibisdeclares.h
+EXTRA_DIST += @srcp1@/ibis.h
+EXTRA_DIST += @srcp1@/icl.h
+EXTRA_DIST += @srcp1@/mp_private.h
+EXTRA_DIST += @srcp1@/ibisdefines.h
+EXTRA_DIST += @srcp1@/ibislists.h
+EXTRA_DIST += @srcp1@/knuth.h
+EXTRA_DIST += @srcp1@/mp_prototypes.h
+EXTRA_DIST += @srcp1@/ibisglobals.h
+EXTRA_DIST += @srcp1@/ibisstructs.h
+EXTRA_DIST += @srcp1@/mp_init.h
+
+libp1_la_SOURCES = 
+libp1_la_SOURCES += @srcp1@/file_no_path.c
+libp1_la_SOURCES += @srcp1@/chkstat.F
+libp1_la_SOURCES += @srcp1@/find_hist_key.c
+libp1_la_SOURCES += @srcp1@/ibis_col.c
+libp1_la_SOURCES += @srcp1@/ibis_file.c
+libp1_la_SOURCES += @srcp1@/ibis_globals.c
+libp1_la_SOURCES += @srcp1@/ibis_group.c
+libp1_la_SOURCES += @srcp1@/ibis_label.c
+libp1_la_SOURCES += @srcp1@/ibis_rec.c
+libp1_la_SOURCES += @srcp1@/ibis_row.c
+libp1_la_SOURCES += @srcp1@/ibis_signal.c
+libp1_la_SOURCES += @srcp1@/ibisgr.c
+libp1_la_SOURCES += @srcp1@/ibisgr_bridge.c
+libp1_la_SOURCES += @srcp1@/icl_bridge.c
+libp1_la_SOURCES += @srcp1@/icl_get.c
+libp1_la_SOURCES += @srcp1@/icl_new.c
+libp1_la_SOURCES += @srcp1@/icl_strings.c
+libp1_la_SOURCES += @srcp1@/knuth.c
+libp1_la_SOURCES += @srcp1@/knuth_dump.c
+libp1_la_SOURCES += @srcp1@/knuth_lookup.c
+libp1_la_SOURCES += @srcp1@/knuth_var.c
+libp1_la_SOURCES += @srcp1@/momati.F
+libp1_la_SOURCES += @srcp1@/momati_c.c
+libp1_la_SOURCES += @srcp1@/mp_bridges.c
+libp1_la_SOURCES += @srcp1@/mp_triaxcoef.c
+libp1_la_SOURCES += @srcp1@/mpbuf2mpo.c
+libp1_la_SOURCES += @srcp1@/mpfree.c
+libp1_la_SOURCES += @srcp1@/mpgetkeywords.c
+libp1_la_SOURCES += @srcp1@/mpgetvalues.c
+libp1_la_SOURCES += @srcp1@/mpinit.c
+libp1_la_SOURCES += @srcp1@/mpinternals.c
+libp1_la_SOURCES += @srcp1@/mplabelread.c
+libp1_la_SOURCES += @srcp1@/mplabelwrite.c
+libp1_la_SOURCES += @srcp1@/mpll2xy.c
+libp1_la_SOURCES += @srcp1@/mpmpo2buf.c
+libp1_la_SOURCES += @srcp1@/mpsetdebugflag.c
+libp1_la_SOURCES += @srcp1@/mpsetvalues.c
+libp1_la_SOURCES += @srcp1@/mpxy2ll.c
+libp1_la_SOURCES += @srcp1@/mthd_file_new.c
+libp1_la_SOURCES += @srcp1@/mthd_file_old.c
+libp1_la_SOURCES += @srcp1@/mthd_io_col.c
+libp1_la_SOURCES += @srcp1@/mthd_io_gr1.c
+libp1_la_SOURCES += @srcp1@/mthd_io_old.c
+libp1_la_SOURCES += @srcp1@/mthd_io_row.c
+libp1_la_SOURCES += @srcp1@/mthd_labl_gr1.c
+libp1_la_SOURCES += @srcp1@/mthd_labl_new.c
+libp1_la_SOURCES += @srcp1@/mthd_labl_old.c
+libp1_la_SOURCES += @srcp1@/mthd_null.c
+libp1_la_SOURCES += @srcp1@/mvcl.c
+libp1_la_SOURCES += @srcp1@/mve.F
+libp1_la_SOURCES += @srcp1@/mvlc.c
+libp1_la_SOURCES += @srcp1@/ortho_obl_c.c
+libp1_la_SOURCES += @srcp1@/persp_proj_c.c
+libp1_la_SOURCES += @srcp1@/prnt.c
+libp1_la_SOURCES += @srcp1@/searcv3_c.c
+libp1_la_SOURCES += @srcp1@/struct_lists.c
+libp1_la_SOURCES += @srcp1@/struct_xcol.c
+libp1_la_SOURCES += @srcp1@/struct_xgap.c
+libp1_la_SOURCES += @srcp1@/struct_xgroup.c
+libp1_la_SOURCES += @srcp1@/struct_xibis.c
+libp1_la_SOURCES += @srcp1@/struct_xrec.c
+libp1_la_SOURCES += @srcp1@/triaxtran.F
+libp1_la_SOURCES += @srcp1@/triaxtran_c.c
+libp1_la_SOURCES += @srcp1@/util_file.c
+libp1_la_SOURCES += @srcp1@/util_format.c
+libp1_la_SOURCES += @srcp1@/util_strings.c
+libp1_la_SOURCES += @srcp1@/util_trans.c
+libp1_la_SOURCES += @srcp1@/xknuth.c
+libp1_la_SOURCES += @srcp1@/xknuth_comp.c
+libp1_la_SOURCES += @srcp1@/zia.c
+libp1_la_SOURCES += @srcp1@/zmomati.c
+libp1_la_SOURCES += @srcp1@/zmve.c

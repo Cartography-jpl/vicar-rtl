@@ -1,0 +1,131 @@
+      subroutine CSORT (C, M, N, K, L, CTEMP)
+noindent
+C     .  Copyright (C) 1989, California Institute of Technology.
+C     .  All rights reserved.  U. S. Government sponsorship under
+C     .  NASA contract NAS7-918 is acknowledged.
+C>> 1994-11-14  CSORT  Krogh   Declared all vars.
+c>> 1988-11-22  CSORT  Snyder  Initial code.
+c
+c     Sort the M:N-vector of character strings C according to the (K:L)
+c     substring of each element.  CTEMP is a temporary scalar character
+c     string at least as long as an element of C.
+c
+      integer M, N
+      character*(*) C(*), CTEMP
+c
+c     *****     Local Variables     ************************************
+c
+c BL      is the left bound of the sub-array to be sorted at the next
+c         step.
+c BR      is the right bound of the sub array to be sorted at the next
+c         step.
+c CL      is the current left bound of the unsorted sub-array.
+c CR      is the current right bound of the unsorted sub-array.
+c CTEMP   holds elements of C during exchanges.
+c PARTN   is the subscript of the partition element.
+c STACKL  keeps track of the left bounds of sub-arrays waiting to be
+c         sorted.
+c STACKR  keeps track of the right bounds of sub-arrays waiting to be
+c         sorted.
+c STKTOP  keeps track of the top of the stacks.
+c
+      integer BL,BR,CL,CR,PARTN, K, L
+      integer STACKL(32),STACKR(32),STKTOP
+indent
+c
+c     *****     Executable Statements     ******************************
+c
+      if (n-m.ge.10) then
+         stktop=1
+         stackl(1)=m
+         stackr(1)=n
+         do until (stktop.eq.0)
+            bl=stackl(stktop)
+            br=stackr(stktop)
+            stktop=stktop-1
+c           Choose a partitioning element.  Use the median of the first,
+c           middle and last elements.  Sort them so the extreme elements
+c           serve as sentinels during partitioning.
+            cl=(bl+br)/2
+            if (c(bl)(k:l).gt.c(cl)(k:l)) then
+               ctemp=c(cl)
+               c(cl)=c(bl)
+               c(bl)=ctemp
+            end if
+            if (c(bl)(k:l).gt.c(br)(k:l)) then
+               ctemp=c(bl)
+               c(bl)=c(cl)
+               c(cl)=ctemp
+            end if
+            if (c(cl)(k:l).gt.c(br)(k:l)) then
+               ctemp=c(cl)
+               c(cl)=c(bl)
+               c(bl)=ctemp
+            end if
+            partn=cl
+            ctemp=c(br-1)
+            c(br-1)=c(cl)
+            c(cl)=ctemp
+c           Partition the sub-array around PARTN.  Exclude the above
+c           considered elements from partitioning because they're al-
+c           ready in the correct subfiles.  Stop scanning on equality to
+c           prevent files containing equal values from causing a loop.
+            cl=bl
+            cr=br-1
+            do forever
+               do until (c(cl)(k:l).ge.c(partn)(k:l))
+                  cl=cl+1
+               end until
+               do until (c(cr)(k:l).le.c(partn)(k:l))
+                  cr=cr-1
+               end until
+               if (cl.gt.cr) exit forever
+               ctemp=c(cl)
+               c(cl)=c(cr)
+               c(cr)=ctemp
+               if (partn.eq.cl) partn=cr
+            end forever
+c           Put sub-arrays on the stack if they're big enough.  Put the
+c           larger under the smaller, so the smaller will be done next.
+c           This makes the upper bound of the stack depth log2 (n-m+1).
+c           (The "Hibbard" modification of quicksort).
+            if (cl-bl .gt. br-cr) then
+               if (cl-bl.gt.10) then
+                  stktop=stktop+1
+                  stackl(stktop)=bl
+                  stackr(stktop)=cr
+               end if
+               if (br-cr.gt.10) then
+                  stktop=stktop+1
+                  stackl(stktop)=cl
+                  stackr(stktop)=br
+               end if
+            else
+               if (br-cr.gt.10) then
+                  stktop=stktop+1
+                  stackl(stktop)=cl
+                  stackr(stktop)=br
+               end if
+               if (cl-bl.gt.10) then
+                  stktop=stktop+1
+                  stackl(stktop)=bl
+                  stackr(stktop)=cr
+               end if
+            end if
+         end until
+      end if
+c     Clean up small subfiles using insertion sort on everything.
+      do for cr = m+1, n
+         ctemp=c(cr)
+         cl=cr
+         do while (c(cl-1)(k:l).gt.ctemp(k:l))
+            c(cl)=c(cl-1)
+            cl=cl-1
+            if (cl.le.m) exit while
+         end while
+         c(cl)=ctemp
+      end for
+c
+      return
+c
+      end program

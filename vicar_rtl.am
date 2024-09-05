@@ -1,0 +1,50 @@
+# In the original MIPL code, the libraries libp2, libp1, librtl, libshvic, and 
+# libtae are separate libraries. However, they are never used except together. 
+# As a convenience, we put them all into one library. We also call this library
+# "libvicar_rtl" rather than "librtl" because there are other libraries 
+# that use the same "librtl" library name. We also stuff libmath77 into this
+# library, since again we don't need to use this library independently.
+
+if BUILD_VICAR_RTL
+include vicar_rtl/external/math77/math77.am
+include vicar_rtl/shell_vicar/shell_vicar.am
+include vicar_rtl/rtl/rtl.am
+# This is an alternative to the full tae build if we only need
+# to build for shell (not for using the old TAE terminal). Right
+# now we never do this, but we'll keep the code around in case
+# we have a reason to do this.
+#include vicar_rtl/stae/stae.am
+include vicar_rtl/tae/tae.am
+include vicar_rtl/p1/p1.am
+include vicar_rtl/p2/p2.am
+
+lib_LTLIBRARIES += libvicar_rtl.la
+libvicar_rtl_la_SOURCES = 
+# Dummy C++ source to cause C++ linking. This file doesn't really exist, this
+# is just a trick to force using the C++ linker to create this library.
+# There isn't much C++, just a few routines in p2.
+nodist_EXTRA_libvicar_rtl_la_SOURCES = dummy.cc
+
+libvicar_rtl_la_CPPFLAGS = $(AM_CPPFLAGS) $(CURSES_CFLAGS)
+libvicar_rtl_la_LDFLAGS = -version-info @VICAR_RTL_LIBARY_VERSION@
+libvicar_rtl_la_LIBADD = libp2.la libmath77.la
+libvicar_rtl_la_LIBADD+= libp1.la librtl.la libshvic.la libtae.la
+libvicar_rtl_la_LIBADD+= $(CURSES_LIBS) $(FLIBS)
+
+pkgconfig_DATA += $(vicarrtltop)/vicar-rtl.pc
+
+install_vicar_rtl_early: libvicar_rtl.la
+	$(MKDIR_P) $(DESTDIR)$(libdir)
+	$(MKDIR_P) $(DESTDIR)$(includedir)
+	if test -f "$(DESTDIR)$(libdir)/libvicar_rtl.la"; then :; else \
+          $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) libvicar_rtl.la "$(DESTDIR)$(libdir)"; \
+          $(MAKE) install-vicarrtlincHEADERS; \
+        fi
+else # Don't build VICAR RTL
+install_vicar_rtl_early:
+	$(noop)
+endif
+
+
+
+

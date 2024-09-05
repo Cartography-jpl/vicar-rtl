@@ -1,0 +1,92 @@
+
+#  Use this makefile to make dint*.f for use in the Cray version
+#  of Math77 that is compiled with the "-dp" option.  The files
+#  dint*.f produced by this makefile should NOT be compiled with
+#  the "-dp" option -- they are the same as the corresponding
+#  sint*.f, except the names SINT* are changed to DINT*.  There
+#  are still a few double precision variables, but it is important
+#  they remain as such.  DON'T use files dint*.f from the usual
+#  Math77 library, compiled with the "-dp" option.  They won't work.
+#  DON'T clobber the dint*f files in the usual Math77 library with
+#  those made by this makefile.
+#
+FFLAGS	      =
+
+OPT1          = +OP
+
+OPT2          = +Obb920		# used only for dinta.f
+
+F77	      = f77
+
+MATH77        = ../
+
+.f.o:	
+		$(F77) $(FFLAGS) $(OPT1) -c $<
+
+OBJDINT       = dint1.o dinta.o dintdl.o dintdu.o dintf.o dintm.o \
+		dintma.o dintns.o dinto.o dintop.o dintsm.o
+
+SRCDINT       = dint1.f dintdl.f dintdu.f dintf.f dintm.f \
+		dintma.f dintns.f dinto.f dintop.f dintsm.f
+
+SHELL	      = /bin/sh
+
+all:	
+	@echo	Use this makefile to make dint\*.f for use in the Cray version
+	@echo	of Math77 that is compiled with the \"-dp\" option.  The files
+	@echo	dint\*.f produced by this makefile should NOT be compiled with
+	@echo	the \"-dp\" option -- they are the same as the corresponding
+	@echo	sint\*.f, except the names SINT\* are changed to DINT\*.  There
+	@echo	are still a few double precision variables, but it is important
+	@echo	they remain as such.  DON\'T use files dint\*.f from the usual
+	@echo	Math77 library, compiled with the \"-dp\" option.  They won\'t work.
+	@echo	DON\'T clobber the dint\*.f files in the usual Math77 library with
+	@echo	those made by this makefile.
+	@echo	
+	@echo	To make all dint sources from sint sources use \"make source\"
+	@echo	To make all dint objects from dint sources use \"make dint\"
+	@echo	One file can be made by using, e.g. \"make dint1.f\" or \"make \
+	dint1.o\"
+dint:		$(OBJDINT)
+
+source:		$(SRCDINT)
+
+dint1.f:	$(MATH77)sint1.f
+		sed 's/SINT/DINT/g' < $? > $@
+
+dinta.f:	$(MATH77)sinta.f
+		sed 's/SINT/DINT/g' < $? > $@
+
+dintdl.f:	$(MATH77)sintdl.f
+		sed 's/SINT/DINT/g' < $? > $@
+
+dintdu.f:	$(MATH77)sintdu.f
+		sed 's/SINT/DINT/g' < $? > $@
+
+dintf.f:	$(MATH77)sintf.f
+		sed 's/SINT/DINT/g' < $? > $@
+
+dintm.f:	$(MATH77)sintm.f
+		sed 's/SINT/DINT/g' < $? > $@
+
+dintma.f:	$(MATH77)sintma.f
+		sed 's/SINT/DINT/g' < $? > $@
+
+dintns.f:	$(MATH77)sintns.f
+		sed 's/SINT/DINT/g' < $? > $@
+
+dinto.f:	$(MATH77)sinto.f
+		sed 's/SINT/DINT/g' < $? > $@
+
+dintop.f:	$(MATH77)sintop.f
+		sed 's/SINT/DINT/g' < $? > $@
+
+dintsm.f:	$(MATH77)sintsm.f
+		sed 's/SINT/DINT/g' < $? > $@
+
+dinta.o:	dinta.f
+		$(F77) $(FFLAGS) $(OPT2) -c dinta.f
+
+clean:;		@rm -f core dint*
+
+clobber:;	@rm -f core dint* tags

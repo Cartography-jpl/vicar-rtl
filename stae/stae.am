@@ -1,0 +1,30 @@
+# Convenience library, will go into libvicar_rtl.
+# Note we don't currently build this
+
+noinst_LTLIBRARIES += libstae.la
+
+libstae_la_SOURCES = 
+
+# Make sure to pick local include files, rather than ones found in tae.
+libstae_la_CPPFLAGS = -I$(srcdir)/$(staeinc) $(AM_CPPFLAGS)
+libstae_la_SOURCES += @srcstae@/chartype.c
+libstae_la_SOURCES += @srcstae@/fmtval.c
+libstae_la_SOURCES += @srcstae@/forstring.np.c
+libstae_la_SOURCES += @srcstae@/getprim.c
+libstae_la_SOURCES += @srcstae@/mmsg.c
+libstae_la_SOURCES += @srcstae@/mparm.c
+libstae_la_SOURCES += @srcstae@/optstr.c
+libstae_la_SOURCES += @srcstae@/parmgen.c
+libstae_la_SOURCES += @srcstae@/qparmgen.c
+libstae_la_SOURCES += @srcstae@/restrict.c
+libstae_la_SOURCES += @srcstae@/stralloc.c
+libstae_la_SOURCES += @srcstae@/string.c
+libstae_la_SOURCES += @srcstae@/stringcnv.c
+libstae_la_SOURCES += @srcstae@/stubs.c
+libstae_la_SOURCES += @srcstae@/syntax.c
+libstae_la_SOURCES += @srcstae@/taearith.np.c
+libstae_la_SOURCES += @srcstae@/vmparmgen.c
+libstae_la_SOURCES += @srcstae@/xerror.c
+libstae_la_SOURCES += @srcstae@/xqgen.c
+libstae_la_SOURCES += @srcstae@/xqgenbr.c
+libstae_la_SOURCES += @srcstae@/xzinit.c

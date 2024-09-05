@@ -1,0 +1,23 @@
+Source directories are shared.  Only machine dependence is in lib/$VICCPU.
+
+In theory amach.f might need to be changed for different architectures, but
+in practice all current ones are close enough to IEEE not to matter.
+
+ducomp.f and sucomp.f don't compile on g77 (linux or mac) but this seems not
+to matter.  A few warnings about MAX should be safe to ignore.
+
+rgd 1/20/2007
+
+----
+
+Building for mac-osx:
+
+select
+set path=($path .)
+set path=($path /usr/local/bin)		# just for g77
+cd v5.0
+mkdir lib/$VICCPU
+make_osx.csh
+
+Only difference between make.csh and make_osx.csh is use of g77 instead of f77.
+

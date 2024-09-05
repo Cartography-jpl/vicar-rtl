@@ -1,0 +1,196 @@
+#!/usr/bin/env ruby
+# Short script to unpack all the com files the gui, p1 and p2 directory 
+# and create a automake files to compile them. This needs to only be run 
+# once when we are initially unpacking the com files from a VICAR delivery. 
+# We then check all of the source files into svn.
+
+require "fileutils"
+
+# Small wrapper around the vunpack program
+class ComFile
+  include FileUtils
+  attr_reader :file_name, :dir_name
+
+  # Unpack the data into a temporary directory.
+  def initialize(fname)
+    @file_name = fname
+    @dir_name = File.basename(file_name, ".com")
+    Dir.mkdir(dir_name)
+    ObjectSpace.define_finalizer(self, 
+                                 ComFile.cleanup(dir_name))
+    system "cd #{dir_name}; ~/AfidsDebug/install_test/bin/vunpack ../#{file_name} > /dev/null"
+  end
+
+  # Return a list of all of the files in the com file
+  def files
+    t = Dir.entries(dir_name)
+    t.shift                     # Remove "." and ".." in directory listing
+    t.shift
+    t
+  end
+
+  # Return the contents of the imake file, with all lines ending with "\" 
+  # joined together (processing is simpler if we don't need to worry about
+  # multiple lines.
+  def imake
+    t = File.read("#{dir_name}/#{dir_name}.imake")
+    t.gsub!(/\\s*\n/s, " ")
+    t
+  end
+  
+  # Read the imake file to determine the list of source files. This includes
+  # both the source files and the header files.
+  def source
+    res = []
+    imake.split("\n").each do |ln|
+      ln.sub!(/\/\*.*\*\//, "") # Remove comments
+      if(ln.sub!(/^\#define\s*MODULE_LIST\d?/, "") ||
+         ln.sub!(/^\#define\s*INCLUDE_LIST\d?/, ""))
+        res.push(ln.split)
+      end
+    end
+    res.flatten
+  end
+  # Unpack all of the source files into the directory that the .com file
+  # came from. We rename ".f" files as ".F" files - for technical reasons
+  # automake works better with the .F files.
+  def unpack_source
+    source.each do |f|
+      f2 = f.sub(".f", ".F")
+      copy("#{dir_name}/#{f}", File.dirname(file_name) + "/#{f2}")
+    end
+    if(files.include?("#{dir_name}.pdf"))
+      copy("#{dir_name}/#{dir_name}.pdf", File.dirname(file_name))
+    end
+  end    
+# Cleanup the temporary files.    
+  def ComFile.cleanup(dname)
+    lambda { system "rm -r #{dname}" }
+  end
+end
+
+if false
+# Read in all of the p1 .com files, and unpack the source files. We don't
+# unpack the test software or the imake, just the files needed to compile
+# the library.
+source = []
+Dir.glob(File.dirname(__FILE__) + "/core-d/p1/sub/*.com").each do |f|
+  t = ComFile.new(f)
+  source.push(t.source)
+  t.unpack_source
+end
+
+# Generate an automake file for compiling all of the source.
+source.flatten!.sort!
+f = File.open(File.dirname(__FILE__) + "/am/p1.am", "w")
+f << <<END
+# This is the automake file for compiling the p1 subroutines. This was
+# originally created by the file ../comunpack. All this did was go through
+# all of the imake files found in the various .com files and generate this
+# automake file. Feel free to edit this file if needed, or you can recreate
+# it using comunpack.
+lib_LTLIBRARIES += libp1.la
+libp1_la_LIBADD = librtl.la
+libp1_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/$(rtlinc) -I$(srcdir)/$(p1inc)
+libp1_la_FFLAGS = $(AM_FLAGS) -fno-range-check
+
+libp1_la_SOURCES = 
+END
+source.each do |src|
+  unless(src =~ /\.h/)
+    f << "libp1_la_SOURCES += @srcp1@/" << src.sub(".f", ".F") << "\n"
+  end
+end
+
+source = []
+Dir.glob(File.dirname(__FILE__) + "/core-d/p2/sub/*.com").each do |f|
+  t = ComFile.new(f)
+  source.push(t.source)
+  t.unpack_source
+end
+
+# Generate an automake file for compiling all of the source.
+source.flatten!.sort!
+f = File.open(File.dirname(__FILE__) + "/am/p2.am", "w")
+f << <<END
+# This is the automake file for compiling the p2 subroutines. This was
+# originally created by the file ../comunpack. All this did was go through
+# all of the imake files found in the various .com files and generate this
+# automake file. Feel free to edit this file if needed, or you can recreate
+# it using comunpack.
+lib_LTLIBRARIES += libp2.la
+libp2_la_LIBADD = libgui.la libp1.la librtl.la libMotiffApp.la
+libp2_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/$(rtlinc) -I$(srcdir)/$(p2inc)
+libp2_la_CPPFLAGS+= $(MOTIF_CFLAGS) -I$(srcdir)/$(motifappinc)
+libp2_la_CPPFLAGS+= -I$(srcdir)/$(p1inc) -I$(srcdir)/$(guiinc)
+
+libp2_la_SOURCES = 
+END
+source.each do |src|
+  unless(src =~ /\.h/)
+    f << "libp2_la_SOURCES += @srcp2@/" << src.sub(".f", ".F") << "\n"
+  end
+end
+
+source = []
+Dir.glob(File.dirname(__FILE__) + "/core-d/gui/sub/gui/*.com").each do |f|
+  t = ComFile.new(f)
+  source.push(t.source)
+  t.unpack_source
+end
+
+# Generate an automake file for compiling all of the source.
+source.flatten!.sort!
+f = File.open(File.dirname(__FILE__) + "/am/gui.am", "w")
+f << <<END
+# This is the automake file for compiling the gui subroutines. This was
+# originally created by the file ../comunpack. All this did was go through
+# all of the imake files found in the various .com files and generate this
+# automake file. Feel free to edit this file if needed, or you can recreate
+# it using comunpack.
+lib_LTLIBRARIES += libgui.la
+libgui_la_LIBADD = libp1.la libMotiffApp.la
+libgui_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/$(rtlinc) -I$(srcdir)/$(guiinc)
+libgui_la_CPPFLAGS+= $(MOTIF_CFLAGS) -I$(srcdir)/$(motifappinc)
+libgui_la_CPPFLAGS+= -I$(srcdir)/$(p1inc)
+
+libgui_la_SOURCES = 
+END
+source.each do |src|
+  unless(src =~ /\.h/)
+    f << "libgui_la_SOURCES += @srcgui@/" << src.sub(".f", ".F") << "\n"
+  end
+end
+
+end
+
+
+am = File.open(File.dirname(__FILE__) + "/am/p2prog.am", "w")
+am << <<END
+# This is the automake file for compiling the p2 programs. This was
+# originally created by the file ../comunpack. All this did was go through
+# all of the imake files found in the various .com files and generate this
+# automake file. Feel free to edit this file if needed, or you can recreate
+# it using comunpack.
+
+END
+prog = []
+Dir.glob(File.dirname(__FILE__) + "/core-d/p2/prog/*.com").each do |f|
+  t = ComFile.new(f)
+  prog.push(t.dir_name)
+  t.unpack_source
+  am << "# Program " << t.dir_name << "\n"
+  am << "bin_PROGRAMS += " << t.dir_name << "\n"
+  am << t.dir_name << "_SOURCES = \n"
+  "_CPPFLAGS = "
+  am << t.dir_name << "_CPPFLAGS = $(AM_CPPFLAGS) -I$(srcdir)/$(rtlinc) -I$(srcdir)/$(p2inc)\n"
+  am << t.dir_name << "_CPPFLAGS+= $(MOTIF_CFLAGS) -I$(srcdir)/$(motifappinc)\n"
+  am << t.dir_name << "_CPPFLAGS+= -I$(srcdir)/$(p1inc) -I$(srcdir)/$(guiinc)\n"
+  am << t.dir_name << "_LDADD = libp2.la $(MOTIF_LIBS)\n"
+  t.source.each do |src|
+    am << t.dir_name << "_SOURCES += @srcp2prog@/" << src.sub(".f", ".F") 
+    am << "\n"
+  end
+  am << "\n"
+end
+

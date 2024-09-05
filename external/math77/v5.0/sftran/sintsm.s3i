@@ -1,0 +1,76 @@
+      REAL             FUNCTION SINTSM (SXMIN)
+num73(999999)
+C     .  Copyright (C) 1989, California Institute of Technology.
+C     .  All rights reserved.  U. S. Government sponsorship under
+C     .  NASA contract NAS7-918 is acknowledged.
+c>> 1994-10-19 SINTSM  Krogh  Changes to use M77CON
+c>> 1994-07-07 SINTSM  Snyder set up for CHGTYP.
+c>> 1994-07-05 SINTSM  Snyder  Corrected calculation
+C>> 1993-05-18 SINTSM  Krogh -- Changed "END" to "END PROGRAM"
+C>> 1987-11-19 SINTSM  Snyder  Initial code.
+C
+c--S replaces "?": ?intc, ?intec, ?INTSM
+c
+C     CALCULATE THE MINIMUM STEPSIZE TO USE IF ALOCAL WERE SET EQUAL TO
+C     SXMIN.
+C
+C     WRITE X = TA + (T-TA)**2/TB.  IF WE LET X2 - X1 BE THE SMALLEST
+C     ALLOWED STEP AT X1, SAY SMIN, THEN
+C     TB*(X2-X1) = TB*SMIN = (T2-TA)**2 - (T1-TA)**2, OR
+C     TB*SMIN = (T2-T1)*(T2-T1+2*(T1-TA)).  SOLVING FOR T2-T1 PROVIDES
+C     THE EXPRESSIONS IN THE CODE BELOW.  THE ANALYSIS PROCEEDS
+C     SIMILARLY WHEN X = TA + (T-TA)**4/TB**3.
+C
+      REAL             SXMIN
+C
+C     *****     LOCAL VARIABLES     ************************************
+C
+C SG      IS A TEMPORARY VARIABLE
+      REAL             SG
+C SMIN    IS THE VALUE THAT WILL BE RETURNED AS THE MINIMUM STEPSIZE.
+      REAL             SMIN
+C SOLVE   IS AN ARITHMETIC STATEMENT FUNCTION DEFINED BELOW.
+      REAL             SOLVE
+C SQRTTB  IS SQRT(ABS(TB))
+      REAL             SQRTTB
+C SX      IS A LOCAL COPY OF SXMIN.
+      REAL             SX
+C TDECR   IS AN ARITHMETIC STATEMENT FUNCTION DEFINED BELOW.
+      REAL             TDECR
+C
+C     *****     COMMON VARIABLES     ***********************************
+C
+include (sintc)
+C
+include (sintec)
+C
+C     *****     STATEMENT FUNCTIONS     ********************************
+C
+C SOLVE   PROVIDES THE SOLUTION OF A QUADRATIC EQUATION.
+      SOLVE(SX,SG)=SQRTTB*SX/(SG*SQRTTB+SQRT(ABS(TB)*SG*SG+SX))
+C TDECR   IS USED TO TRANSFORM AN ABSCISSA FROM THE CURRENT COORDINATE
+C         SYSTEM TO ONE IN WHICH NSUB IS DECREMENTED BY A FACTOR OF 2.
+C     TDECR(SX)=TA+(SX-TA)*((SX-TA)/TB)
+      TDECR(SX)=TA*(1.0+TA/TB)+SX*((SX-TA)/TB-TA/TB)
+C
+C     *****     EXECUTABLE STATEMENTS     ******************************
+C
+      SX=SXMIN
+      IF (NSUB .EQ. 0) THEN
+         SG = SX
+      ELSE
+         SG = TDECR(SX)
+         IF (NSUB .NE. 2) SG = TDECR(SG)
+      END IF
+      SMIN=EDELM3*MAX(EDELM1,ABS(SG))
+      IF (NSUB .NE. 0) THEN
+         SQRTTB=SQRT(ABS(TB))
+         SG = ABS((SX-TA)/TB)
+         SMIN=SOLVE(SMIN,SG)
+         IF (NSUB .NE. 2) SMIN=SOLVE(SMIN,SG*SG)
+      END IF
+      SINTSM=SMIN
+C
+      RETURN
+C
+      END PROGRAM

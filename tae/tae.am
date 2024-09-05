@@ -1,0 +1,124 @@
+# Convenience library, will go into libvicar_rtl.
+noinst_LTLIBRARIES += libtae.la 
+# Install library in standard location
+# I don't think this is used anywhere, so comment this out
+#lib_LTLIBRARIES += libtaec.la 
+
+# Headers to install. We install everything, although I'm not actually
+# sure if that is needed.
+vicarrtlinc_HEADERS += @taeinc@/pgminc $(srcdir)/$(taeinc)/*.h
+vicarrtlinc_HEADERS += $(srcdir)/$(taeinc)/*.inp $(srcdir)/$(taeinc)/*.inc
+
+EXTRA_DIST += @taeinc@/pgminc.fin
+
+libtae_la_SOURCES = 
+#libtaec_la_SOURCES = 
+
+# If we don't have curses library on the system, there is code to simulate
+# it. Only use this if we don't have curses.
+if !HAVE_CURSES
+libtae_la_CPPFLAGS = $(AM_CPPFLAGS) -DTERMLIB
+else
+libtae_la_CPPFLAGS = $(AM_CPPFLAGS) $(CURSES_CFLAGS) -DUSE_CURSES
+endif
+libtae_la_CPPFLAGS+= -I$(srcdir)/$(taeinc)
+
+libtae_la_SOURCES+= @srclibtae@/accStruct1.c
+libtae_la_SOURCES+= @srclibtae@/alloc.np.c
+libtae_la_SOURCES+= @srclibtae@/chartype.c
+libtae_la_SOURCES+= @srclibtae@/collection.c
+libtae_la_SOURCES+= @srclibtae@/comm.np.c
+libtae_la_SOURCES+= @srclibtae@/directive.c
+libtae_la_SOURCES+= @srclibtae@/dynamicmdf.c
+libtae_la_SOURCES+= @srclibtae@/dynamicpdf.c
+libtae_la_SOURCES+= @srclibtae@/enaover.c
+libtae_la_SOURCES+= @srclibtae@/file.np.c
+libtae_la_SOURCES+= @srclibtae@/fmtval.c
+libtae_la_SOURCES+= @srclibtae@/forstring.np.c
+libtae_la_SOURCES+= @srclibtae@/fsubst.np.c
+libtae_la_SOURCES+= @srclibtae@/getprim.c
+libtae_la_SOURCES+= @srclibtae@/hostutil.np.c
+libtae_la_SOURCES+= @srclibtae@/image.np.c
+libtae_la_SOURCES+= @srclibtae@/miscellan.c
+libtae_la_SOURCES+= @srclibtae@/mmsg.c
+libtae_la_SOURCES+= @srclibtae@/mparm.c
+libtae_la_SOURCES+= @srclibtae@/oexits.c
+libtae_la_SOURCES+= @srclibtae@/optstr.c
+libtae_la_SOURCES+= @srclibtae@/parformat.c
+libtae_la_SOURCES+= @srclibtae@/parmfile.c
+libtae_la_SOURCES+= @srclibtae@/parmgen.c
+libtae_la_SOURCES+= @srclibtae@/parmsubs.c
+libtae_la_SOURCES+= @srclibtae@/parmtask.c
+libtae_la_SOURCES+= @srclibtae@/qnextmenu.c
+libtae_la_SOURCES+= @srclibtae@/qparmfile.c
+libtae_la_SOURCES+= @srclibtae@/qparmgen.c
+libtae_la_SOURCES+= @srclibtae@/qparmtask.c
+libtae_la_SOURCES+= @srclibtae@/qvalid.c
+libtae_la_SOURCES+= @srclibtae@/restrict.c
+libtae_la_SOURCES+= @srclibtae@/rqparmgen.c
+libtae_la_SOURCES+= @srclibtae@/stdfunc.c
+libtae_la_SOURCES+= @srclibtae@/stralloc.c
+libtae_la_SOURCES+= @srclibtae@/string.c
+libtae_la_SOURCES+= @srclibtae@/stringcnv.c
+libtae_la_SOURCES+= @srclibtae@/syntax.c
+libtae_la_SOURCES+= @srclibtae@/taearith.np.c
+libtae_la_SOURCES+= @srclibtae@/taeutil.c
+libtae_la_SOURCES+= @srclibtae@/taskpro.np.c
+libtae_la_SOURCES+= @srclibtae@/terminal.np.c
+libtae_la_SOURCES+= @srclibtae@/termlib.c
+libtae_la_SOURCES+= @srclibtae@/transsym.c
+libtae_la_SOURCES+= @srclibtae@/vmcall.c
+libtae_la_SOURCES+= @srclibtae@/vmcopy.c
+libtae_la_SOURCES+= @srclibtae@/vmgetval.c
+libtae_la_SOURCES+= @srclibtae@/vmmisc.c
+libtae_la_SOURCES+= @srclibtae@/vmnextmenu.c
+libtae_la_SOURCES+= @srclibtae@/vmparformat.c
+libtae_la_SOURCES+= @srclibtae@/vmparmfile.c
+libtae_la_SOURCES+= @srclibtae@/vmparmgen.c
+libtae_la_SOURCES+= @srclibtae@/vmparmread.c
+libtae_la_SOURCES+= @srclibtae@/vmparmtask.c
+libtae_la_SOURCES+= @srclibtae@/vmstdout.c
+libtae_la_SOURCES+= @srclibtae@/vmvalid.c
+libtae_la_SOURCES+= @srclibtae@/xco.c
+libtae_la_SOURCES+= @srclibtae@/xcobr.c
+libtae_la_SOURCES+= @srclibtae@/xerror.c
+libtae_la_SOURCES+= @srclibtae@/xi.c
+libtae_la_SOURCES+= @srclibtae@/xibr.c
+libtae_la_SOURCES+= @srclibtae@/xm.c
+libtae_la_SOURCES+= @srclibtae@/xmbr.c
+libtae_la_SOURCES+= @srclibtae@/xqfile.c
+libtae_la_SOURCES+= @srclibtae@/xqfilebr.c
+libtae_la_SOURCES+= @srclibtae@/xqgen.c
+libtae_la_SOURCES+= @srclibtae@/xqgenbr.c
+libtae_la_SOURCES+= @srclibtae@/xqtask.c
+libtae_la_SOURCES+= @srclibtae@/xqtaskbr.c
+libtae_la_SOURCES+= @srclibtae@/xrf.c
+libtae_la_SOURCES+= @srclibtae@/xrfbr.c
+libtae_la_SOURCES+= @srclibtae@/xrfile.c
+libtae_la_SOURCES+= @srclibtae@/xrfilebr.c
+libtae_la_SOURCES+= @srclibtae@/xrgen.c
+libtae_la_SOURCES+= @srclibtae@/xrgenbr.c
+libtae_la_SOURCES+= @srclibtae@/xrrdb.c
+libtae_la_SOURCES+= @srclibtae@/xrrdbbr.c
+libtae_la_SOURCES+= @srclibtae@/xrtask.c
+libtae_la_SOURCES+= @srclibtae@/xrtaskbr.c
+libtae_la_SOURCES+= @srclibtae@/xu.c
+libtae_la_SOURCES+= @srclibtae@/xubr.c
+libtae_la_SOURCES+= @srclibtae@/xvm.c
+libtae_la_SOURCES+= @srclibtae@/xvmbr.c
+libtae_la_SOURCES+= @srclibtae@/xzbr.c
+libtae_la_SOURCES+= @srclibtae@/xzdash.c
+libtae_la_SOURCES+= @srclibtae@/xzexit.c
+libtae_la_SOURCES+= @srclibtae@/xzhost.c
+libtae_la_SOURCES+= @srclibtae@/xzper.c
+libtae_la_SOURCES+= @srclibtae@/xzstd.c
+libtae_la_SOURCES+= @srclibtae@/zcall.c
+libtae_la_SOURCES+= @srclibtae@/zexit.c
+libtae_la_SOURCES+= @srclibtae@/zinit.c
+libtae_la_SOURCES+= @srclibtae@/wrtstd.F
+libtae_la_SOURCES+= @srclibtae@/xt.F
+libtae_la_SOURCES+= @srclibtae@/xzcall.F
+libtae_la_SOURCES+= @srclibtae@/xzinit.F
+
+#libtaec_la_SOURCES+= @srclibtaec@/cmput.c
+

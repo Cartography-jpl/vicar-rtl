@@ -1,0 +1,1513 @@
+      subroutine DBLSE (A, LDA, MTRUE, N, M1TRUE, B, BND, UNBND,
+     *   KPRINT, TOL, IERR, X, RNORM, NSETS, W, SIZE, TNORM,
+     *   Z, CC, SS, INDEX, JSTAT, XT, RT, DIFF)
+inline(!)
+noindent
+c>> 1994-10-19 DBLSE Krogh  Changes to use M77CON
+c>> 1992-10-09 DBLSE CLL  Solve for correction rather than new X.
+c>> 1992-09-02 CLL  Quit doing look-ahead updating of the B() array.
+c>> 1992-09-02 CLL  Add random choice to combat cycling.
+c>> 1992-09-01 CLL  Change elimination method in constraint matrix.
+c>> 1992-09-01 CLL  Add more updating of SIZE().
+c>> 1992-06-17 CLL  Minor editing of comments.
+c>> 1990-07-04 CLL  Minor editing of comments.
+c>> 1988-04-26 CLL
+c>> 1988-01-04 CLL
+c
+c     *** Bounded variables Least Squares with Equality constraints ***
+c
+c     In the following descriptions M denotes the input value MTRUE, and
+c     M1 denotes the input value M1TRUE.
+c     Given an M by N matrix, A, and an M-vector, b,  compute an
+c     N-vector, x, that satisfies the first M1 equations of the linear
+c     system Ax = b as equality constraints, and satisfies the remaining
+c     rows of the system in the least squares sense, subject to bounds
+c     on the components of x.
+c
+c     The bounds are specified in the form:
+c
+c               BND(1,J) .le. X(J) .le. BND(2,J)
+c
+c     where the special value UNBND is used with the meaning that
+c     if BND(1,J) = UNBND, X(J) is unbounded below, and
+c     if BND(2,J) = UNBND, X(J) is unbounded above.
+c
+c     A problem with general linear inequality constraints can be put in
+c     the form acceptable to this subroutine by the introduction of
+c     slack variables.  For example suppose a problem has inequality
+c     constraints represented as Cx .ge. d where C is an M3 x N matrix.
+c     Add M3 components to the end of the x vector, impose nonnegativity
+c     bounds on these new components, and write the equality con-
+c     straints, [C : -I] x = d, where I denotes the identity matrix of
+c     order M3.
+c
+c     In anticipation of this usage, this subroutine searches
+c     for columns in the constraint equations that have only a single
+c     nonzero element (i.e., singletons) and uses these, if the signs
+c     permit, for efficient construction of the initial
+c     triangularization of the constraint equations.
+c     ------------------------------------------------------------------
+c          This code is a substantial generalization of the subroutine,
+c     NNLS, that solves the  least squares problem, Ax = b, subject to
+c     all x(j) .ge. 0.    The subroutine NNLS appeared in SOLVING
+c     LEAST SQUARES PROBLEMS, by Lawson and Hanson, Prentice-Hall, 1974.
+c
+c          This algorithm has two major phases, the initial solution of
+c     the constraint equations, subject to the bounds on the variables,
+c     and then the solution of the least-squares problem, subject to the
+c     equality constraints and the bounds on the variables.
+c
+c          The following Sftran procedures are used to get started and
+c          to finish:
+c
+c     procedure( INITIALIZE )
+c     procedure( TERMINATION )
+c
+c          The following Sftran procedures are used only in Phase 1:
+c
+c     procedure( TRIANGULARIZE USING SINGLETONS )
+c     procedure( ALGORITHM BVEQ )
+c     procedure( BVEQ: SELECT ANOTHER COEF TO SOLVE FOR )
+c     procedure( BVEQ: MOVE JPNEW FROM SET F TO SET S )
+c     procedure( MSG FOR IERR = -1 )
+c     procedure( REARRANGE ROWS )
+c
+c          The following Sftran procedures are used only in Phase 2:
+c
+c     procedure( ALGORITHM BVLS )
+c     procedure( BVLS: SELECT COEF TO SOLVE FOR )
+c     procedure( BVLS: MOVE JPNEW FROM SET F TO SET S )
+c     procedure( GIVENS ROTATIONS, USING IGIV1 AND IGIV2 )
+c     procedure( HOUSEHOLDER TRIANGULARIZATION )
+c     procedure( ELIMINATE IN LOWER ROWS )
+c
+c          The following Sftran procs are used in both Phases 1 & 2:
+c
+c     procedure( CONTROL CONSTRAINT TESTING FOR SET S )
+c     procedure( SEE IF ALL CONSTRAINED COEFFS ARE FEASIBLE )
+c     procedure( PERTURB ANY OUTLIERS IN SET S TO THE BOUNDARY )
+c     procedure( MOVE COEF JZNEW FROM SET S TO SET F )
+c     procedure( GAUSSIAN ELIMINATION, USING IGAUS1 AND IGAUS2 )
+c     procedure( SOLVE TRIANGULAR SYSTEM, INPUT AND OUTPUT IN Z() )
+c     procedure( DEBUG )
+c     -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+c          BVLS was developed by C. L. Lawson and R. J. Hanson at
+c     JPL, 1973 June 12.  This version was identified as BVLS2.
+c          Changes made by Lawson, JPL, 1982 Sept.
+c     Added NSETS into the argument list.
+c     1982 Sept 16.  Converted code to SFTRAN3.  New version was called
+c          BVLS5.
+c     1986 June 25. C. L. Lawson. Adapting code to MATH77 style.
+c     1987 Oct. CLL  Changing name to SBLS.  Using new MATH77 versions
+c          of second-level subroutines.  Developing DBLSE from SBLS to
+c          solve the equality-constrained bounded variable problem.
+c     1988 April CLL & RJH.  Added code to delete constraint rows that
+c          are inconsistent or dependent.
+c     1992 Sept/Oct CLL  Major changes.  Solving for change to X rather
+c          than directly for X.  This changes formulas for updating the
+c          right-side vector in B().  No longer need array SIZE().
+c     ------------------------------------------------------------------
+c                            SUBROUTINE ARGUMENTS
+C
+c     A()     [In/Out]  On entry A() contains the MTRUE by N matrix, A.
+c             On return A() contains the product matrix, G*A,
+c             where G is an MTRUE by MTRUE matrix generated
+c             implicitly by this subroutine.
+c
+c     LDA     [In]  LDA is the first dimensioning parameter for the
+c             array, A().  Require LDA .ge. MTRUE.
+c
+c     MTRUE  [in]  Total number of rows in the matrix, A.  Require
+c            MTRUE > 0.
+c
+c     N  [in]  Number of columns in the matrix, A.  Require N > 0.
+c
+c     M1TRUE  [in]  Number of leading rows of [A,b] to be treated as
+c               equality constraints.  User must set M1TRUE = 0 if
+c               there are no equality constraint rows.
+c               Require 0 .le. M1TRUE .le. min(MTRUE, N).
+c
+c     B()     [In/Out]  On entry B() contains the MTRUE-vector, B.
+c             On return, B() contains G*(B - A[Z] * X[Z] ) where A[Z]
+c             and X[Z] denote the parts indexed in Set F.
+c
+c     BND(,)  [In] If BND(1,J) .eq. UNBND then X(J) is unbounded below.
+c             Otherwise BND(1,J) is the lower bound for X(J).
+c             If BND(2,J) .eq. UNBND then X(J) is unbounded above.
+c             Otherwise BND(2,J) is the upper bound for X(J).
+c             If BND(1,J) .ne. UNBND and BND(2,J) .ne. UNBND, require
+c             BND(1,J) .le. BND(2,J).
+c
+c     UNBND   [In]  Special value to be used in BND(,) to indicate
+c             unboundedness.
+c
+c     KPRINT  [in]  Larger values give more printing.
+c           0:       No printing.
+c           .ge. 1:  Print initial values of each component of X() and
+c                    a line for each move of an index between Sets
+c                    Z and P.
+c           .ge. 2:  Print details showing how index is selected to
+c                    move between Sets Z and P.
+c           .ge. 3:  Use extra input items XT(), RT(), DIFF() to
+c                    compute residuals at various stages to verify
+c                    transformed problems stay consistent with the
+c                    original problem.
+c           .ge. 4:  Print full data array [A : b] at various stages.
+c
+c     TOL     [in]   Tolerance used in tests of variables against
+c           their bounds, and in testing the right side of constraint
+c           equations for zero.  Used in a relative sense in testing
+c           against nonzero bounds, and in an absolute sense testing
+c           against zero.  Suggest a value such as EPS**(0.75), however
+c           a larger value has been found necessary to force
+c           triangularization of the constraint equations in some cases.
+c           Here EPS denotes the machine precision, such as would be
+c           obtained from ?1MACH(4).
+c
+c     IERR  [Out]  Status indicator on return.
+c              = -1  Failed to fully triangularize first M1TRUE rows.
+c                    Subroutine attempts to complete the computation,
+c                    omitting the constraint rows not triangularized.
+c                    User should check residuals of constraint rows.
+c              = 0  No errors detected.
+c              = 1  MTRUE .le. 0  or  N .le. 0
+c              = 2  Inconsistent setting of bounds.
+c              = 3  Too many iterations.  Nominal ITMAX = 5*N.
+c
+c     X()     [Out]  On entry X() need not be initialized.  On return,
+c             X() will contain the solution N-vector.
+c
+c     RNORM   [Out]  The euclidean norm of the residual vector.
+c
+c     NSETS   [Out]  Indicates the No. of components of the solution
+c             vector, X(), that are in Set S.  These values are obtained
+c             by solving a system of equations, and thus will generally
+c             not be at a bound.
+c
+c     W()     [Out]  An N-array of working space.  On return, W() will
+c             contain the dual solution vector.  This will satisfy
+c             W(i) = 0 for all i in Set S,
+c             W(i) .le. 0 for all i in Set F, such that X(i) is at its
+c             lower bound, and
+c             W(i) .ge. 0 for all i in Set F, such that X(i) is at its
+c             upper bound.
+c
+c     SIZE()  [Scratch] !!!  No longer needed  1992-10-12  !!!
+c             Working space dimensioned at least M1TRUE.
+c             SIZE(i) holds scaled roundoff error estimates for B(i).
+c             The roundoff error estimate is TOL times SIZE(i).
+c
+c     TNORM()  [Scratch]  An N-array of working space.
+c
+c     Z()     [Scratch]  Work array of size min(MTRUE, N).  Used during
+c             solution of triangular system to hold right-side vector
+c             initially and the solution vector at conclusion.  Also
+c             used during interpolation to restore feasibility.
+c
+c     CC(), SS()  [Scratch]  Work arrays of size min(MTRUE,N) each.
+c              Used to hold cosines and sines of the Givens
+c              transformations in order to support a column-oriented
+c              implementation.
+c
+c     INDEX()   [Out]  An INTEGER working array of length at least N.
+c                 On exit the contents of this array define the Sets
+c                 S, F, and H.
+c
+c     JSTAT()  [Scratch]  Of length N.
+c
+c     XT(1:N), RT(1:MTRUE), DIFF(1:MTRUE)  For use in testing this subr.
+c         Could be deleted in a production version.  These arrays are
+c         accessed only if KPRINT .ge. 3.
+c         On entry XT() and RT() should contain the known
+c         solution and residual vectors respectively. Diff() is scratch.
+c     ------------------------------------------------------------------
+c                 Description of Sets S, F, and H.
+c
+c     The N components of X() are classified into three disjoint sets.
+c
+c                 INDEX(1)   thru INDEX(NSETS) = Set S.
+c                 INDEX(IF1) thru INDEX(IF2)   = Set F.
+c                 INDEX(IF2+1) thru INDEX(N)   = Set H.
+c
+c                 NF  = IF2 - IF1 + 1
+c                 IF1 = NSETS + 1 = NSP1
+c                 NSETS + NF .le. N
+c
+c     The sizes of sets S and F are given by NSETS and NF.
+c     Set H consists of the components that are constrained to a
+c     unique value by the given constraints.
+c     Sets S and F contain components that a priori are allowed a
+c     possible range of values of nonzero length.
+c     During the computation, set F contains components that are
+c     temporarily being held constant.
+c     Set S contains components whose values are determined by solving
+c     the currently triangularized subsystem, or by adjusting such a
+c     solution set to shift its values from infeasible to feasible.
+c     Members of set F are available for consideration for moving to
+c     set S.
+c     ------------------------------------------------------------------
+c--D replaces "?": ?BLSE, ?ERV1, ?HTCC, ?ROTG, ?ROT, ?DOT
+c--&                 ?NRM2, ?AXPY, ?COPY, ?SWAP, ?RANU
+c     Other subprograms referenced directly: ERMOR, ERMSG, IERM1, IERV1
+c     ------------------------------------------------------------------
+c                         Interesting internal variables
+c
+c     MSG1  [logical]   Used to cause the error message associated with
+c           IERR = -1 to be issued only the first time the error is
+c           detected.  False means the message has not been issued.
+c           True means it has.
+c     ------------------------------------------------------------------
+indent
+      double precision DDOT, DNRM2, DRANU
+      integer N
+      integer BMODE, I, I1, IBOUND, ID, IERR
+      integer IG1, IGAUS1, IGAUS2, IGIV1, IGIV2
+      integer II, IIS, IMAX, INDEX(N), IS, ISNEW, IPUT, IPUT1, IPUT2
+      integer IR, IRLAST, ITEMP, ITER, ITMAX, IF0, IF1, IF2, IFNEW
+      integer J, JCOL, JD, JJ, JJS, JS, JPIV, JSNEW, JPUT
+      integer JSTAT(N), JF, JFNEW
+      integer KPRINT, KSTEP, L, LBOUND, LDA, LEN
+      integer M, M1, M1P1, M1TRUE, MDB, MINMN, MTRUE
+      integer NSP1, NSETS, NF
+
+      double precision A(LDA,N), B(MTRUE), X(N), W(N), Z(*), BND(2,N)
+      double precision UNBND, SIZE(*), TNORM(N), CC(*), SS(*)
+      double precision A1, ABSA1, ALPHA, AMAX
+      double precision B1, BNDL, BSAVE, BSIZE, BTEMP
+      double precision DIFF(MTRUE), FAC, FACTOR
+      double precision HALF, ONE, RANGE, RNORM, RT(MTRUE)
+      double precision T, TEMP, TMAX, TOL, TWO, UP, WMAX
+      double precision XT(N), XTRY
+      double precision ZERO
+
+      logical CMODE, FIND, FREE1, FREE2, FREE, FREEJS(2)
+      logical HITBND, MOVEJF, MSG1
+      parameter(ZERO = 0.0D0, TWO = 2.0D0, FACTOR = 0.01D0)
+      parameter(ONE = 1.0D0, HALF = 0.5D0)
+c     ------------------------------------------------------------------
+      do( INITIALIZE )
+      if( IERR .ne. 0 ) return
+c
+ BLOCKC: do block
+         if( M1 .gt. 0) then
+            do( TRIANGULARIZE USING SINGLETONS )
+c
+c           Here all singletons with the right signs have been brought
+c           into Set S.  If NSETS .lt. M1 we must build the triangle
+c           further.
+c
+            if(NSETS .lt. M1) then
+               CMODE = .true.
+               do( ALGORITHM BVEQ )
+            endif !(NSETS .lt. M1)
+            do( DEBUG )
+         endif !( M1 .gt. 0)
+
+         if(IERR .gt. 0 .or. NSETS .eq. MINMN .or. NF .eq. 0)
+     *         exit( BLOCKC )
+
+         do for JF = 1, N
+            if(X(JF) .ne. ZERO) then
+               call DAXPY(M-M1, -X(JF), A(M1P1,JF), 1, B(M1P1), 1)
+            endif !(X(JF)...)
+         end for ! JF
+         CMODE = .false.
+         if(M1 .gt. 0) then
+            IG1 = 1
+            do( ELIMINATE IN LOWER ROWS )
+         endif !(M1 .gt. 0)
+
+         do( DEBUG )
+
+         do( ALGORITHM BVLS )
+         do( DEBUG )
+      end block ! BLOCKC                   End of Block C
+      do( TERMINATION )
+      return
+c
+c     ------------------------------------------------------------------
+
+      procedure( INITIALIZE )
+c
+      M = MTRUE
+      M1 = M1TRUE
+      if(M .le. 0 .or. N .le. 0) then
+         IERR = 1
+         call IERM1('DBLSE',IERR,0,
+     *   'Require M > 0 and N > 0.',  'M',M,',')
+         call IERV1('N',N,'.')
+         return
+      endif !( M... )
+      IERR = 0
+      ITER=0
+      ITMAX = 6*N
+      MSG1 = .false.
+      M1P1 = M1+1
+      MINMN = min(M,N)
+      IF2=N
+      IF1=1
+      NSETS=0
+      NSP1=1
+c     .        Initialize INDEX() and set W() = zero.  Setting W() =
+c     .        zero is not needed for the functioning of this
+c     .        subroutine, it is just done so the W() array will not
+c     .        have garbage in it if debugging printing is used.
+c
+      do for J=1,N
+         INDEX(J)=J
+         W(J) = ZERO
+      end for ! J
+c
+c     .                         BEGIN..  LOOP ON IF0 TO INITIALIZE  X()
+      IF0=IF1
+      do while( IF0  .le.  IF2 )
+      J=INDEX(IF0)
+      if( BND(1,J)  .eq.  UNBND) then
+         if(BND(2,J)  .eq.  UNBND) then
+            X(J) = ZERO
+         else
+            X(J) = min(ZERO,BND(2,J))
+         endif !(BND(2,J)  .eq.  UNBND)
+      elseif( BND(2,J)  .eq.  UNBND) then
+         X(J) = max(ZERO,BND(1,J))
+      else
+         RANGE = BND(2,J) - BND(1,J)
+         if( RANGE  .eq.  ZERO ) then
+c
+c           .  Here X(J) is constrained to a single value.
+c
+            INDEX(IF0)=INDEX(IF2)
+            INDEX(IF2)=J
+            IF0=IF0-1
+            IF2=IF2-1
+            W(J)=ZERO
+            X(J)=BND(1,J)
+         elseif( RANGE  .gt.  ZERO) then
+c
+c           .   The following statement sets X(J) to 0 if the
+c           .   constraint interval includes 0, and otherwise sets
+c           .   X(J) to the endpoint of the constraint interval
+c           .   that is closest to 0.
+c
+            X(J) = max(BND(1,J), min(BND(2,J),ZERO))
+         else
+c$                                ****** Error:  IERR = 2 ******
+            IERR = 2
+            call IERM1('DBLSE',IERR,0,
+     *      'Inconsistent setting of bound for X(J).', 'J',J,',')
+            call DERV1('UNBND',UNBND,',')
+            call DERV1('BND(1,J)',BND(1,J),',')
+            call DERV1('BND(2,J)',BND(2,J),',')
+         exit proc
+         endif !( RANGE...)
+      endif !( BND(1,J)  .eq.  UNBND )
+      if(KPRINT .ge. 1)
+     * print '(1x,a,i4,a,g14.6)','Initializing:  J=',J,',  X(J)=',X(J)
+c
+         IF0=IF0+1
+      end while !( IF0  .le.  IF2 )
+c        .                         END.. LOOP ON IF0 TO INITIALIZE  X()
+      NF = IF2 - IF1 + 1
+      end proc !( INITIALIZE )
+c     ------------------------------------------------------------------
+
+      procedure( TRIANGULARIZE USING SINGLETONS )
+c
+c     Search for singletons.  Use them to start the triangle if
+c     their signs are right.
+c
+      ITEMP = IF1
+      do for IF0 = ITEMP, IF2
+         if(NSETS .eq. M1) exit for
+         JF = INDEX(IF0)
+c
+c        .  The following loop sets II.
+c        .  If A(1..M, JF) contains exactly one nonzero, II will
+c        .  be set to the row index of that element.
+c        .  Otherwise II will be set to zero.
+c
+         II = 0
+         do for I = 1, M
+            if(A(I,JF) .ne. ZERO) then
+               if(II .ne. 0) then
+                  II = 0
+                  exit for
+               endif !(II...)
+               II = I
+            endif !(A(I,JF)...)
+         end for ! I
+c
+         if(II .gt. NSETS .and. II .le. M1) then
+            BTEMP = B(II) - DDOT(N, A(II,1), LDA, X, 1)
+            XTRY = X(JF) + BTEMP / A(II,JF)
+            if((BND(1,JF) .eq. UNBND .or. XTRY .ge. BND(1,JF)) .and.
+     *         (BND(2,JF) .eq. UNBND .or. XTRY .le. BND(2,JF))) then
+               MOVEJF = .true.
+            else
+               BSIZE = abs(B(II))
+               do for J = 1,N
+                  BSIZE = BSIZE + abs(A(II,J)*X(J))
+               end for ! J
+               if(abs(BTEMP) .lt. TOL * BSIZE) then
+                  MOVEJF = .true.
+                  XTRY = X(JF)
+               else
+                  MOVEJF = .false.
+               endif !(abs(B(II))...)
+            endif !(BND(1,JF)...)
+
+            if(MOVEJF) then
+
+c
+c              .  Move JF from Set F to Set S.
+c
+               X(JF) = XTRY
+               if(II .ne. NSP1) then
+                  call DSWAP(N, A(II,1),LDA, A(NSP1,1),LDA)
+                  B(II) = B(NSP1)
+               endif !(II .ne. NSP1)
+               B(NSP1) = ZERO
+               if(IF0 .ne. IF1) then
+                  INDEX(IF0) = INDEX(IF1)
+                  INDEX(IF1) = JF
+               endif !(IF0 .ne. IF1)
+               NSETS = NSP1
+               NSP1 = NSETS + 1
+               IF1 = NSP1
+               NF = NF -1
+            endif !(MOVEJF)
+         endif !(II .ge. NSETS)
+      end for ! IF0
+      if(KPRINT .ge. 1) print '(1x,a,i4)',
+     *   'Started using singletons.  NSETS=',NSETS
+      end proc !( TRIANGULARIZE USING SINGLETONS )
+c     ------------------------------------------------------------------
+
+      procedure( ALGORITHM BVEQ )
+c
+c     BVEQ == Bounded Variables solution of linear EQuations.
+c     Solve this problem using rows 1 through M1 and the
+c     variables indexed in Set S and Set F.
+c     This proc will decrease the values of M1 and M if rows of the
+c     equality constraint system are linearly dependent on earlier rows.
+c
+      if(KPRINT .ge. 1)
+     * print '(1x/1x,a,a,i5,a,i5)',
+     * 'Entering Proc BVEQ..  ', 'NSETS=',NSETS,',  NF=',NF
+
+      KSTEP = NSP1
+      do while(KSTEP .le. M1)
+         do( PREPARE ROW NSP1 TO BE OBJECTIVE FUNCTION )
+
+
+ LOOPA: do forever
+c
+c     .  Quit on error flag, or
+c     .  if Set F is empty.
+c
+      if(NF .eq. 0) then
+         if(NSETS .lt. M1) do( MSG FOR IERR = -1 )
+         exit while
+      elseif(IERR .gt. 0  ) then
+         exit while
+      endif !(NF...)
+c
+      do( BVEQ: SELECT ANOTHER COEF TO SOLVE FOR )
+      if(FIND) then
+         do( BVEQ: MOVE JSNEW FROM SET F TO SET S )
+c
+c        .  Delta_x is now in Z().
+c
+c        .  The following proc may move one variable from Set S
+c        .  to Set F.  All variables remaining in Set S when it
+c        .  completes will be feasible.  May set IERR positive.
+c
+         do( CONTROL CONSTRAINT TESTING FOR SET S )
+         if(.not. HITBND) then
+            KSTEP = KSTEP + 1
+            exit (LOOPA)
+         endif !(.not. HITBND)
+      else
+c
+c        .  The following proc deletes a constraint row that appears
+c        .  to be dependant on preceeding constraint rows or
+c        .  inconsistent with preceeding constraint rows.  It also
+c        .  decrements M1 and M.  Will set IERR negative.
+c
+         do( MSG FOR IERR = -1 )
+         do( REARRANGE ROWS )
+         exit (LOOPA)
+      endif !(.not. FIND)
+c
+      end forever !(LOOPA)
+      end while !(KSTEP .le. M1)
+c
+      end proc !( ALGORITHM BVEQ )
+c     ------------------------------------------------------------------
+
+      procedure( BVEQ: SELECT ANOTHER COEF TO SOLVE FOR )
+c
+c     .    Search thru Set F for a new coef to solve for.
+c     Pick column having elt of largest magnitude in row NSP1
+c     among those having acceptable sign.
+c     On entry BSAVE contains the original input value of B(NSP1), and
+c     B(NSP1) contains the residual for row NSP1 using the current X().
+c     Index JF = INDEX(IF0) is acceptable
+c     if X(JF) is free to increase and B(NSP1)/A(NSP1,JF) .ge. zero, or
+c     if X(JF) is free to decrease and B(NSP1)/A(NSP1,JF) .le. zero.
+c
+c     .  If no new coeff is found, then check abs(B(NSP1)) for being
+c     small enough that it might be zero apart from roundoff error.
+c     If not, set FIND = false and exit.
+c     If so, set B(NSP1) = zero and try the search again.
+c
+c     .    We wish to force the maximum number of
+c     components into the solution, and thus we accept components that
+c     will enter with a zero change as well as those that will enter
+c     with a change in the acceptable direction.
+c     .    If a coef is selected, set FIND = true.
+c     The index of the selected coef is JSNEW = INDEX(ISNEW).
+c     .    If no coef is selected, set FIND = false.
+c
+      FIND = .false.
+      AMAX = TOL
+      ISNEW = 0
+      B1 = B(NSP1)
+      if(KPRINT .ge. 4) then
+            print '(1x/1x,a/1x)','Before selecting next JSNEW.  [A:b] ='
+            do for I = 1,NSETS+1
+               print '(1x,i3,2x,5g13.6/(6x,5g13.6))',
+     *          I,(A(I,J),J=1,N), B(I)
+            end for ! I
+      endif !(KPRINT...)
+c
+ LOOP_BMODE:  do for BMODE = 1,2
+      if(KPRINT .ge. 2) print '(4x,a,g14.6,a,i2/4x,a,i4/4x,a)',
+     * 'Scan Set F with B(NSP1) = ', B1,',   BMODE = ',BMODE,
+     * '                  NSP1 = ',NSP1,
+     *' -- JF,A(NSP1,JF),FREE1,FREE2,FREE,         JFbest --'
+c
+c     .                                 Begin loop through Set F.
+      do for IF0=IF1,IF2
+         JF=INDEX(IF0)
+         A1 = A(NSP1,JF)
+         ABSA1 = abs(A1)
+         if(ABSA1 .le. AMAX) then
+            if(KPRINT .ge. 2) print '(4x,i4,g14.6)',JF, A1
+         else
+c
+c        .  Set FREE1 = true if X(JF) is not at the left end-point of
+c        .  its constraint region.
+c        .  Set FREE2 = true if X(JF) is not at the right end-point of
+c        .  its constraint region.
+c        .  Set FREE = true if X(JF) is not at either end-point of its
+c        .  constraint region.
+c
+         FREE1 = BND(1,JF) .eq. UNBND  .or.  X(JF) .ne. BND(1,JF)
+         FREE2 = BND(2,JF) .eq. UNBND  .or.  X(JF) .ne. BND(2,JF)
+         FREE = FREE1 .and. FREE2
+c
+         if( FREE ) then
+            AMAX = ABSA1
+            ISNEW = IF0
+         elseif( FREE1 ) then
+            if(B1/A1 .le. ZERO) then
+               AMAX = ABSA1
+               ISNEW = IF0
+            endif !(B1/A1...)
+         elseif( FREE2 ) then
+            if(B1/A1 .ge. ZERO) then
+               AMAX = ABSA1
+               ISNEW = IF0
+            endif !(B1/A1...)
+         endif !( FREE, FREE1, FREE2 )
+         if(KPRINT .ge. 2) then
+            if(ISNEW .eq. 0) then
+               print '(4x,i4,g14.6,3L2)',
+     *         JF,A1,FREE1,FREE2,FREE
+            else
+               print '(4x,i4,g14.6,3L2,16x,i4)',
+     *         JF,A1,FREE1,FREE2,FREE,       INDEX(ISNEW)
+            endif !(ISNEW...)
+         endif !(KPRINT...)
+         endif !(ABSA1 .le. AMAX)
+      end for ! IF0
+c
+      if(AMAX .ne. TOL) exit(LOOP_BMODE)
+      if(BMODE .eq. 1 .and. B1 .ne. ZERO) then
+         BSIZE = abs(BSAVE)
+         do for J = 1,N
+            BSIZE = BSIZE + abs(A(NSP1,J)*X(J))
+         end for ! J
+
+         if(abs(B1) .le. TOL * BSIZE) then
+            if(KPRINT .ge. 2) then
+               print'(1x,a,i4/1x,a,g14.6,a,g14.6)',
+     *         'Setting B(NSP1) = 0.,   NSP1=',NSP1,
+     *         '    Old B(NSP1) =',B(NSP1),',   TOL*BSIZE =', TOL*BSIZE
+            endif !(KPRINT...)
+            B(NSP1) = ZERO
+            B1 = ZERO
+            cycle (LOOP_BMODE)
+         endif !( abs(B1)...)
+      endif !(BMODE...)
+      FIND = .false.
+      exit proc
+      end for ! BMODE
+c     .                          Selected index is JSNEW = INDEX(ISNEW)
+      FIND = .true.
+      JSNEW = INDEX(ISNEW)
+      FREEJS(1) = BND(1,JSNEW)  .eq.  UNBND   .or.
+     *            X(JSNEW)  .ne.  BND(1,JSNEW)
+      FREEJS(2) = BND(2,JSNEW)  .eq.  UNBND   .or.
+     *            X(JSNEW)  .ne.  BND(2,JSNEW)
+      end proc !( BVEQ: SELECT ANOTHER COEF TO SOLVE FOR )
+c     ------------------------------------------------------------------
+
+      procedure( BVEQ: MOVE JSNEW FROM SET F TO SET S )
+c
+c     The index  JSNEW=INDEX(IFNEW)  has been selected to be moved from
+c     Set F to Set S.
+c     B(1..M) has been adjusted as though X(JSNEW) = 0.
+c     Update indices moving JSNEW from Set F to Set S.
+c     Do one stage of Gaussian elimination in the upper matrix.
+c     Copy B() to Z() and solve for Delta_x, leaving it in Z().
+c     Set W(JSNEW) = 0.
+c
+      if(KPRINT .ge. 1) print '(1x,a,i4)',
+     * '==>  Move index from F to S.  JSNEW  =',JSNEW
+c
+c
+      INDEX(ISNEW)=INDEX(IF1)
+      INDEX(IF1)=JSNEW
+      IF1=IF1+1
+      NSETS=NSP1
+      NSP1=NSP1+1
+      NF = NF - 1
+      LEN = M1 - NSETS
+c
+      W(JSNEW)=ZERO
+      call DCOPY(NSETS, B, 1,  Z, 1)
+      do( SOLVE TRIANGULAR SYSTEM, INPUT AND OUTPUT IN Z() )
+      end proc !( BVEQ: MOVE JSNEW FROM SET F TO SET S )
+c     ------------------------------------------------------------------
+      procedure( MSG FOR IERR = -1 )
+
+      IERR = -1
+      if(.not. MSG1) then
+         MSG1 = .true.
+         call ERMSG('DBLSE', IERR, 0,
+     *   'Failed to fully triangularize the equality constraint rows.',
+     *   ',')
+         call ERMOR(
+     *   'Could be due to dependent or inconsistent constraints.',',')
+         call ERMOR(
+     *   'The computation will be completed, ignoring the',',')
+         call ERMOR(
+     *    'un-triangularized constraint rows.  User should check',',')
+         call ERMOR('residuals of constraint equations.','.')
+      endif !(.not. MSG1)
+      end proc !( MSG FOR IERR = -1 )
+c     ------------------------------------------------------------------
+      procedure( REARRANGE ROWS )
+
+C     Here when Row NSP1 of A() appears to be either dependent or
+c     inconsistent relative to preceeding constraint rows.
+c     Delete Row NSP1.
+c     Have NSP1 .le. M1.
+c     If NSP1 < M1 copy row M1 to row NSP1.
+c     Copy row M to row M1.
+c     Decrease M1 and M each by 1.
+c
+c     .              If NSP1 < M1 copy row M1 to row NSP1.
+c
+      if(NSP1 .lt. M1) then
+         call DCOPY(N, A(M1,1), LDA, A(NSP1,1), LDA)
+         B(NSP1) = B(M1)
+         RT(NSP1) = RT(M1)
+      endif !(NSP1...)
+c     .                              Copy row M to row M1.
+c
+         call DCOPY(N, A(M,1), LDA, A(M1,1), LDA)
+         B(M1) = B(M)
+         RT(M1) = RT(M)
+c     .                              Decrement M1 and M.
+      M = M-1
+      M1 = M1-1
+      M1P1 = M1+1
+      MINMN = min(M,N)
+      end proc !( REARRANGE ROWS )
+c     ------------------------------------------------------------------
+
+      procedure( ALGORITHM BVLS )
+c
+c     .   BVLS == Bounded Variables Least Squares
+c     Solve this problem using rows 1 through M and the
+c     variables indexed in Set S and Set F.
+c
+      if(KPRINT .ge. 1)
+     * print '(1x/1x,a,a,L2, a,i5,'',''/23x,2(a,i5))',
+     * 'Entering Proc BVLS..  ',
+     * 'CMODE=',CMODE,', M=',M,
+     * 'NSETS=',NSETS,', NF=',NF
+
+ LOOPA: do forever
+c
+c     .  Quit if Set F is empty, or
+c     .  if M cols have been triangularized, or
+c     .  on error flag.
+
+      if( NF .eq. 0  .or.  NSETS .eq. M ) exit (LOOPA)
+c
+      do( BVLS: SELECT COEF TO SOLVE FOR )
+c
+c     .  If no index was found to be moved from set Z to set P,
+c     .  then go to termination.
+c
+      if( .not. FIND ) exit (LOOPA)
+c
+      do( BVLS: MOVE JSNEW FROM SET F TO SET S )
+c
+ LOOPB:  do forever
+c
+c        When this loop is entered, NSETS will be > M1.
+c        NSETS decreases by one on each repetition of this loop, but
+c        will still be > M1  at the beginning of every
+c        repetition of this loop.
+c
+            call DCOPY(NSETS, B, 1, Z, 1)
+            do( SOLVE TRIANGULAR SYSTEM, INPUT AND OUTPUT IN Z() )
+c
+            do( CONTROL CONSTRAINT TESTING FOR SET S )
+c
+c           .  The above proc will set IERR nonzero if
+c           .  the iteration count is exceeded.
+c           .  Otherwise the proc will either set HITBND := true and
+c           .  decrement NSETS, or set HITBND := false and leave
+c           .  NSETS unchanged.  NSETS will be .ge. M1.
+c
+            if(IERR .gt. 0) exit (LOOPA)
+            if(.not. HITBND .or. NSETS .eq. M1) exit (LOOPB)
+         end forever !(LOOPB)
+c
+c     .  All coeffs in Set S are feasible.  Loop back.
+      end forever !(LOOPA)
+c
+      end proc !( ALGORITHM BVLS )
+c     ------------------------------------------------------------------
+
+      procedure( BVLS: SELECT COEF TO SOLVE FOR )
+c
+c     .    Search thru Set F for a new coef to solve for.
+c     First compute dual coeff, W(J) = negative gradient.
+c     Next classify the members of Set F by setting ISTAT().
+c     .   ISTAT()   Meaning
+c     .       -1    X(J) is rejected for moving to Set S.  Either
+c     .             W(J) = 0, or X(J) is at a bound and the sign of W(J)
+c     .             indicates the objective function will increase if
+c     .             X(J) is moved away from the bound.
+c     .        1    X(J) is accepted for further consideration
+c     .             as a candidate for moving to Set S.  W(J) is
+c     .             nonzero and if X(J) is at a bound, the sign of W(J)
+c     .             indicates moving away from the bound will decrease
+c     .             the objective function.
+c
+c     Among those with ISTAT(J) > 0, choose one having column norm
+c     exceeding a locally determined tolerance, and among these the
+c     largest abs(W(J)).
+c     .    Note that when the sign of W(J) is uncertain we reject
+c     moving X(J) to Set S.  This biases the method toward keeping
+c     variables in Set F when in doubt.
+c     .    If a coef is selected, set FIND = true.
+c     The index of the selected coef is JSNEW = INDEX(ISNEW).
+c     .    If no coef is selected, set FIND = false.
+c
+      FIND = .FALSE.
+      TMAX = ZERO
+      LEN = M - NSETS
+      if(KPRINT .ge. 4) then
+            print '(1x/1x,a/1x)', 'Before computing W(): [A:b] ='
+            do for I = 1,M
+               print '(1x,i3,2x,5g13.6/(6x,5g13.6))',
+     *          I,(A(I,J),J=1,N), B(I)
+            end for ! I
+      endif !(KPRINT...)
+c
+         if(KPRINT .ge. 2) print '(4x,a)','Scan Set F:',
+     *' -- J,FREE1,FREE2,FREE, W(J),       JSTAT(J), TNORM(J), W(+) --'
+c
+c     .                                 Begin loop through Set F.
+      do for IF0=IF1,IF2
+         J=INDEX(IF0)
+c
+c        .  Set FREE1 = true if X(J) is not at the left end-point of
+c        .  its constraint region.
+c        .  Set FREE2 = true if X(J) is not at the right end-point of
+c        .  its constraint region.
+c        .  Set FREE = true if X(J) is not at either end-point of its
+c        .  constraint region.
+c
+         FREE1 = BND(1,J)  .eq.  UNBND   .or.   X(J)  .ne.  BND(1,J)
+         FREE2 = BND(2,J)  .eq.  UNBND   .or.   X(J)  .ne.  BND(2,J)
+         FREE = FREE1 .and. FREE2
+c
+c        .             Compute dual coefficient W(J).
+c
+         W(J) = DDOT(LEN, A(NSP1,J), 1, B(NSP1),1)
+c
+c        .  The following code sets JSTAT(J) and computes TNORM(J)
+c        .  and TMAX.
+c        .  The columns whose dual signs are ok to be moved into Set S
+c        .  will be identified by JSTAT(J) = 1. Those not ok
+c        .  have JSTAT(J) = -1.
+c        .     For the ok columns the norm is computed and stored in
+c        .  TNORM(J) and the max of these is accumulated in TMAX.
+c
+         JSTAT(J) = -1
+         if(W(J) .ne. ZERO) then
+         if( FREE ) then
+            JSTAT(J) = 1
+            TNORM(J) = DNRM2(LEN, A(NSP1,J), 1)
+            TMAX = max(TMAX, TNORM(J))
+         elseif( FREE1 ) then
+            if(W(J) .lt. ZERO) then
+               TNORM(J) = DNRM2(LEN, A(NSP1,J), 1)
+               TMAX = max(TMAX, TNORM(J))
+               JSTAT(J) = 1
+            endif !(W(J) .lt. ZERO)
+         elseif( FREE2 ) then
+            if(W(J) .gt. ZERO) then
+               TNORM(J) = DNRM2(LEN, A(NSP1,J), 1)
+               TMAX = max(TMAX, TNORM(J))
+               JSTAT(J) = 1
+            endif !(W(J)...)
+         endif !( FREE, FREE1, FREE2 )
+         endif !( W(J) .ne. ZERO)
+
+         if(KPRINT .ge. 2) then
+            if(JSTAT(J) .eq. 1) then
+               print '(4x,i4,3L2, g14.6,i4,g14.6)',
+     *         J,FREE1,FREE2,FREE,W(J),     JSTAT(J),TNORM(J)
+            else
+               print '(4x,i4,3L2, g14.6,i4)',
+     *         J,FREE1,FREE2,FREE,W(J),     JSTAT(J)
+            endif !(JSTAT(J)...)
+         endif !(KPRINT...)
+      end for ! IF0
+c
+      if(TMAX .eq. ZERO) then
+         FIND = .false.
+         exit proc
+      endif !(TMAX...)
+      FIND = .true.
+c
+c        .     Among the ok columns having norm .ge. half*TMAX
+c        .     find one having largest abs(W(J)).
+c
+      WMAX = ZERO
+      do for IF0 = IF1, IF2
+         J = INDEX(IF0)
+         if(JSTAT(J) .gt. 0) then
+            if(TNORM(J) .ge. HALF*TMAX) then
+               if(abs(W(J)) .ge. WMAX) then
+                  ISNEW = IF0
+                  WMAX = abs(W(J))
+               endif !(abs(W(J))...)
+            endif !(TNORM(J)...)
+         endif !(JSTAT(J)...)
+      end for ! IF0
+c     .                          Selected index is JSNEW = INDEX(ISNEW)
+      JSNEW = INDEX(ISNEW)
+      FREEJS(1) = BND(1,JSNEW)  .eq.  UNBND   .or.
+     *            X(JSNEW)  .ne.  BND(1,JSNEW)
+      FREEJS(2) = BND(2,JSNEW)  .eq.  UNBND   .or.
+     *            X(JSNEW)  .ne.  BND(2,JSNEW)
+      end proc !( BVLS: SELECT COEF TO SOLVE FOR )
+c     ------------------------------------------------------------------
+
+      procedure( BVLS: MOVE JSNEW FROM SET F TO SET S )
+c
+c     The index  JSNEW=INDEX(IF0)  has been selected to be moved from
+c     Set F to Set S.
+c     Compute new Householder transformation.  Apply it to A and b.
+c     Update indices defining Sets P and Z.
+c     Zero subdiagonal elts in col JSNEW,  Set W(JSNEW)=0.
+c
+      if(KPRINT .ge. 1) print '(1x,a,i4)',
+     * '==>  Move index from F to S.  JSNEW  =',JSNEW
+c
+c     .  Compute new Householder transformation and apply it to B().
+c
+      call DHTCC(1,NSP1,NSP1+1,M,A(1,JSNEW),  UP,B,M,1)
+c
+c     .                                  Update pointers.
+      INDEX(ISNEW)=INDEX(IF1)
+      INDEX(IF1)=JSNEW
+      IF1=IF1+1
+      NSETS=NSP1
+      NSP1=NSP1+1
+      NF = NF - 1
+c
+          do for JF=IF1,IF2
+             JJ=INDEX(JF)
+             call DHTCC (2,NSETS,NSP1,M,A(1,JSNEW),
+     *          UP,A(1,JJ),LDA,1)
+          end for ! JF
+         if(KPRINT .ge. 3)
+     *       call DHTCC (2,NSETS,NSP1,M,A(1,JSNEW),  UP,RT(1),M,1)
+c
+         do for L=NSP1,M
+             A(L,JSNEW)=ZERO
+         end for ! L
+      W(JSNEW)=ZERO
+      end proc !( BVLS: MOVE JSNEW FROM SET F TO SET S )
+c     ------------------------------------------------------------------
+
+      procedure( CONTROL CONSTRAINT TESTING FOR SET S )
+c
+c     On entry, the Delta_x obtained by solving the current Set S
+c     is in the array Z().
+c     If X + Delta_x satisfies the bounds, this proc returns with
+c        X := X + Delta_x,   HITBND := false,
+c        B(min(M1,NSETS):NSETS) := 0.
+c     Otherwise this proc returns with
+c        X := X + ALPHA * Delta_x,  HITBND := true,
+c        B(min(M1,NSETS):NSETS) := (1 - ALPHA)*B(min(M1,NSETS):NSETS),
+c        assigns values to IFNEW and IBOUND, and decrements NSETS.
+c
+      if(KPRINT .ge. 2) then
+         print '(1x,a)','   Solved Set S obtaining Delta_x:'
+         do for I = 1,NSETS
+            print '(7x,a,i4,g14.6,a,g14.6)',
+     *         'J,X(J)=',INDEX(I),X(INDEX(I))+Z(I),', D_X=', Z(I)
+         end for ! I
+      endif !(KPRINT...)
+
+      ITER=ITER+1
+      if(ITER  .gt.  ITMAX) then
+c        .                             ****** Error: IERR = 3 ******
+         IERR = 3
+         call IERM1('DBLSE',IERR,0,
+     *   'Iteration count ITER exceeds ITMAX.','ITER',ITER,',')
+         call IERV1('ITMAX',ITMAX,'.')
+         exit proc
+      endif !( ITER...)
+c
+      do( SEE IF ALL CONSTRAINED COEFFS ARE FEASIBLE )
+c
+c     The above proc call sets HITBND.  If HITBND = true then it
+c     also sets ALPHA, IFNEW, and IBOUND.
+c
+      if( HITBND ) then
+c
+         JFNEW=INDEX(IFNEW)
+         if(KPRINT .ge. 2) print '(1x,a,i4,a,i4,a/15x,a,g14.6)',
+     *   '   Hit a bound.  IFNEW=',IFNEW,
+     *   ',  JFNEW=INDEX(IFNEW)=',JFNEW,',','ALPHA=',ALPHA
+c
+c        Here ALPHA will be between 0 and 1 for use in computing
+c             X()  :=  X() + ALPHA * Delta_x.
+c
+         do for IS=1,NSETS
+            L=INDEX(IS)
+            X(L) = X(L) + ALPHA * Z(IS)
+            if(KPRINT .ge. 2) print '(1x,a,i4,g14.6)',
+     *         '   Interpolate to feasibility:  L,X(L)=',L,X(L)
+         end for ! IS
+         do for I = min(M1P1, NSETS), NSETS
+            B(I) = (ONE - ALPHA) * B(I)
+         end for ! I
+c
+         do( MOVE COEF JFNEW FROM SET S TO SET F )
+      else
+         do for IS=1,NSETS
+            L=INDEX(IS)
+            X(L) = X(L) + Z(IS)
+         end for ! IS
+         do for I = min(M1P1, NSETS), NSETS
+            B(I) = ZERO
+         end for ! I
+      endif !(HITBND)
+c
+      if(NSETS .gt. 0) then
+         do( PERTURB ANY OUTLIERS IN SET S TO THE BOUNDARY )
+      endif !(NSETS...)
+c
+      end proc !( CONTROL CONSTRAINT TESTING FOR SET S )
+c     ------------------------------------------------------------------
+
+      procedure( SEE IF ALL CONSTRAINED COEFFS ARE FEASIBLE )
+c
+c     The Delta_x vector is currently in the array Z().
+c     See if each x + Delta_x in Set S is in the closure of its
+c     constraint region.
+c     If so, set HITBND = false.
+c     If not, set HITBND = true, and also set ALPHA, IFNEW, and IBOUND.
+c     Then ALPHA will satisfy  0. .le. ALPHA .lt. 1.
+c
+      ALPHA=TWO
+ ISLOOP: do for IS=1,NSETS
+          L=INDEX(IS)
+          XTRY = X(L) + Z(IS)
+          if(BND(1,L) .ne. UNBND .and. XTRY .lt. BND(1,L)) then
+c            .                               XTRY crosses lower bound.
+             LBOUND=1
+          elseif(BND(2,L) .ne. UNBND .and. XTRY .gt. BND(2,L)) then
+c            .                               XTRY crosses upper bound.
+             LBOUND=2
+      else
+         LBOUND = 0
+      endif !( BND(,)... )
+c$
+      if( LBOUND  .ne.  0 ) then
+         BNDL = BND(LBOUND,L)
+         T = (BNDL - X(L)) / (XTRY - X(L))
+         if(KPRINT .ge. 2) then
+            print'(1x,a,i4,a,i4,a,g15.7/1x,a,g15.7,a,g15.7,a,g15.7)',
+     *   'L=',L,',   LBOUND=',LBOUND,',   BND(LBOUND,L)=',BNDL,
+     *   'X(L)=',X(L),',   XTRY=',XTRY,',   T=',T
+         endif !(KPRINT...)
+         if(T .le. ALPHA ) then
+            if( T .gt. ONE - TOL  .or.
+     *        (L .eq. JSNEW .and. .not. FREEJS(LBOUND)) .or.
+     *        (BNDL .eq. ZERO .and. abs(XTRY) .le. TOL) .or.
+     *        (BNDL .ne. ZERO .and. abs(XTRY - BNDL) .le. TOL*abs(BNDL))
+     *        ) then
+c
+c              .  If the test of T is true
+c              .  we assume XTRY differs from its bound only due
+c              .  to roundoff.  To avoid having this cause a move
+c              .  from Set S to Set F we set XTRY to its bound and
+c              .  ignore this value of T.
+c              .  Similarly, if the tests of L and FREEJS() are
+c              .  passed, it means the
+c              .  coeff JSNEW, which is the coeff most recently
+c              .  moved into P, has crossed the bound it was on just
+c              .  before it was moved into P.  We assume this is due
+c              .  to roundoff error and adjust the value back to this
+c              .  bound.
+c              .  Similarly if the other tests are passed we assume
+c              .  XTRY differs from its bound only due to roundoff.
+c
+               if(KPRINT .ge. 1) print '(4x,a,a/4x,a,i4,a,i4,a,g16.8)',
+     *            'While testing against bounds,',
+     *            ' adjust XTRY for roundoff error.',
+     *            'IS=',IS,',  L=INDEX(IS)=',L,',  Old XTRY=',XTRY
+               Z(IS) = BND(LBOUND,L) - X(L)
+               if(KPRINT .ge. 1) print '(30x,a,g16.8)',
+     *            ',  New XTRY=', X(L) + Z(IS)
+            else
+               if(ALPHA .eq. ZERO) then
+c
+c                 .  Here T must be zero, and we have already saved a
+c                 .  previous value of IS (into IFNEW) associated with
+c                 .  a zero value of T.
+c                 .  To reduce further the unlikely chance of
+c                 .  cycling, we make a random selection between the
+c                 .  current IS and the earlier saved one.  As there is
+c                 .  no need to continue the IS loop, we exit here.
+c
+                  if(DRANU() .lt. HALF) then
+                     IFNEW = IS
+                     IBOUND = LBOUND
+                  endif !(DRANU()...)
+                  exit for(ISLOOP)
+               else
+                  ALPHA=T
+                  IFNEW=IS
+                  IBOUND=LBOUND
+               endif !(ALPHA .eq. ZERO)
+            endif !(T...)
+         endif !( ALPHA  .gt.  T )
+      endif !( LBOUND )
+      end for ! IS
+      HITBND = ALPHA  .ne.  TWO
+      end proc !( SEE IF ALL CONSTRAINED COEFFS ARE FEASIBLE )
+c     ------------------------------------------------------------------
+
+      procedure( PERTURB ANY OUTLIERS IN SET S TO THE BOUNDARY )
+c
+c     .  See if the remaining coeffs in set P are feasible.
+c     They should be because of the way alpha was determined.
+c     If any are infeasible it is due to round-off error.
+c     Any that are infeasible or on a boundary will be set to
+c     the boundary value and kept in set P.
+c
+            do for IS=1,NSETS
+               IBOUND = 0
+               JS=INDEX(IS)
+               if(BND(1,JS)  .ne.  UNBND .and.
+     *            X(JS)  .lt.  BND(1,JS)) then
+                  IBOUND=1
+               elseif (BND(2,JS) .ne. UNBND .and.
+     *            X(JS) .gt. BND(2,JS)) then
+                  IBOUND=2
+               endif !( BND()...)
+               if(IBOUND .ne. 0) then
+c
+c              .  The current coeff that appears to have crossed a
+c              .  bound should, at worst be on its bound.
+c              .  We assume this is due to roundoff error and adjust
+c              .  the value back to the bound.
+
+               if(KPRINT .ge. 1) then
+                  print '(4x,a,a/4x,a,i4,a,g16.8)',
+     *            'While testing against bounds,',
+     *            ' adjust X(JS) for roundoff error.',
+     *            'JS=',JS,',  Old X(JS)=',X(JS)
+                  print '(10x,a,g16.8)',',   New X(JS)=',BND(IBOUND,JS)
+               endif !(KPRINT...)
+               X(JS) = BND(IBOUND,JS)
+               endif !(IBOUND...)
+            end for ! IS
+      end proc !( PERTURB ANY OUTLIERS IN SET S TO THE BOUNDARY )
+c     ------------------------------------------------------------------
+
+      procedure( MOVE COEF JFNEW FROM SET S TO SET F )
+c
+c     Here we have JFNEW = INDEX(IFNEW) and this coeff has just hit its
+c     bound indexed by IBOUND.
+c     This proc is ref'd by Proc CONTROL CONSTRAINT TESTING, which is
+c     ref'd by Proc BVEQ and Proc BVLS.
+c     When reached via BVEQ we have CMODE = true
+c     When reached via BVLS we have CMODE = false
+c
+      X(JFNEW)=BND(IBOUND,JFNEW)
+      if(KPRINT .ge. 1) then
+         print '(1x,a,i5)','==>  Move index from S to F.  JFNEW =',JFNEW
+         if(KPRINT .ge. 2) print '(27x,a,g14.6)','X(JFNEW) =',X(JFNEW)
+      endif !(KPRINT...)
+      NSP1=NSETS
+      NSETS=NSETS-1
+      NF = NF + 1
+      IF1=IF1-1
+c     .             If IFNEW .eq. NSETS+1 there is nothing more to do.
+c
+      if(IFNEW .ne. NSP1) then
+c     .                                Shift indices in Set S.
+      do for IS = IFNEW, NSETS
+         INDEX(IS) = INDEX(IS+1)
+      end for ! IS
+      INDEX(IF1)=JFNEW
+c
+c     .  Here the columns INDEX(IFNEW .. NSETS) are of lengths
+c     .  IFNEW+1 .. NSETS+1, respectively.  We must eliminate the
+c     .  last element of each of these columns.
+c
+      if(IFNEW .lt. M1) then
+         IGAUS1 = IFNEW
+         IGAUS2 = min(NSETS-1, M1-1)
+         do( GAUSSIAN ELIMINATION, USING IGAUS1 AND IGAUS2 )
+         if(NSETS .le. M1) then
+c
+c           .  Use diag elt (NSETS,NSETS) to eliminate elt below it.
+c
+            JS = INDEX(NSETS)
+            if(A(NSP1, JS) .ne. ZERO) then
+               FAC = -A(NSP1,JS)/A(NSETS,JS)
+               call DAXPY(N, FAC, A(NSETS,1), LDA, A(NSP1,1), LDA)
+               A(NSP1,JS) = ZERO
+               B(NSP1) = B(NSP1) + FAC * B(NSETS)
+               RT(NSP1) = RT(NSP1) + FAC * RT(NSETS)
+            endif !(A(...))
+         else              !  Here NSETS .gt. M1
+            do( COMPLETE RETRIANGULARIZATION FROM ROW M1 ON DOWN )
+         endif !(NSETS...)
+      elseif(IFNEW .eq. M1) then
+            do( COMPLETE RETRIANGULARIZATION FROM ROW M1 ON DOWN )
+      else   ! Here IFNEW .gt. M1
+         IGIV1 = IFNEW
+         IGIV2 = NSETS
+         do( GIVENS ROTATIONS, USING IGIV1 AND IGIV2 )
+      endif !(IFNEW .lt. M1)
+      endif !(IFNEW .ne. NSP1)
+      end proc !( MOVE COEF JFNEW FROM SET S TO SET F )
+c     ------------------------------------------------------------------
+      procedure( COMPLETE RETRIANGULARIZATION FROM ROW M1 ON DOWN )
+c
+c     .  Here the columns INDEX(M1 .. NSETS) are of lengths
+c     .  M1+1 .. NSETS+1, respectively.  We must eliminate the
+c     .  last element of each of these columns.
+c
+c        .  Find element of largest magnitude in row M1 among column
+c        .  indices INDEX(M1 .. NSETS).
+c
+         AMAX = ZERO
+         do for IS = M1, NSETS
+            JS = INDEX(IS)
+            if(abs(A(M1,JS)) .gt. AMAX) then
+               IMAX = IS
+               AMAX = abs(A(M1,JS))
+            endif !(abs(A(M1,JS))...)
+         end for ! IS
+c        .                Interchange columns indexed by M1 and IMAX.
+c
+         if(IMAX .ne. M1) then
+            JPIV = INDEX(IMAX)
+            INDEX(IMAX) = INDEX(M1)
+            INDEX(M1) = JPIV
+         endif !(IMAX...)
+c
+c        .  Do one stage of Gaussian elimination.
+c
+         IG1 = M1
+         do( ELIMINATE IN LOWER ROWS )
+c
+c        .  Use Householder transformations to
+c        .  retriangularization in columns M1+1 through IMAX-1
+c
+         if(M1P1 .le. IMAX-1 ) then
+            IPUT1 = M1P1
+            IPUT2 = IMAX-1
+            IRLAST = IMAX+1
+            do( HOUSEHOLDER TRIANGULARIZATION )
+         endif !(M1P1...)
+c
+c        .  Use Givens transformations to
+c        .  retriangularization in columns max(M1+1,IMAX) through NSETS
+c
+         if(max(M1P1, IMAX) .le. NSETS) then
+            IGIV1 = max(M1P1, IMAX)
+            IGIV2 = NSETS
+            do( GIVENS ROTATIONS, USING IGIV1 AND IGIV2 )
+         endif !(max(M1P1, IMAX)...)
+      end proc !( COMPLETE RETRIANGULARIZATION FROM ROW M1 ON DOWN )
+c     ------------------------------------------------------------------
+*     procedure( GIVENS ROTATIONS, USING IGIV1 AND IGIV2 )
+c
+c     This proc applies Givens rotations to pairs of rows, IS and IS+1,
+c     for IS = IGIV1, ..., IGIV2.
+c     This version applies these to all columns from 1 to N, even though
+c     in general this causes arithmetic to be done on elements that
+c     are known to be zero.
+c
+*        do for IS = IGIV1, IGIV2
+*           JS=INDEX(IS)
+*              call DROTG (A(IS,JS),A(IS+1,JS),CC,SS)
+*              A(IS+1,JS)=ZERO
+*              LEN = JS-1
+*              if(LEN .gt. 0)
+*    *            call DROT(LEN,A(IS,1),LDA,A(IS+1,1),LDA,CC,SS)
+*              LEN = N - JS
+*              if(LEN .gt. 0)
+*    *            call DROT(LEN,A(IS,JS+1),LDA,A(IS+1,JS+1),LDA,CC,SS)
+*              call DROT (1, B(IS),1, B(IS+1),1, CC,SS)
+*              if(KPRINT .ge. 3)
+*    *         call DROT (1, RT(IS),1, RT(IS+1),1, CC,SS)
+*        end for ! IS
+*     end proc !( GIVENS ROTATIONS, USING IGIV1 AND IGIV2 )
+c     ------------------------------------------------------------------
+
+      procedure( GIVENS ROTATIONS, USING IGIV1 AND IGIV2 )
+c
+c     This proc applies Givens rotations to pairs of rows, IS and IS+1,
+c     for IS = IGIV1, ..., IGIV2.
+c     This version applies these only to the columns that might contain
+c     nonzeros in the affected rows.
+c
+      do for L = IGIV1, IF2
+         JCOL = INDEX(L)
+c
+c        .          Apply previously determined Givens transformations.
+c
+         do for IR = IGIV1, min(L-1,IGIV2)
+            TEMP =          CC(IR)*A(IR,JCOL) + SS(IR)*A(IR+1,JCOL)
+            A(IR+1,JCOL) = -SS(IR)*A(IR,JCOL) + CC(IR)*A(IR+1,JCOL)
+            A(IR  ,JCOL) = TEMP
+         end for ! IR
+c        .                     Compute a new Givens transformation.
+c
+         if(L .le. IGIV2) then
+            call DROTG(A(L,JCOL), A(L+1,JCOL), CC(L), SS(L))
+            A(L+1,JCOL) = ZERO
+         endif !(L...)
+      end for ! L
+c
+c        .          Apply previous transformations to B()
+c
+         do for IR = IGIV1, IGIV2
+            TEMP =     CC(IR)*B(IR) + SS(IR)*B(IR+1)
+            B(IR+1) = -SS(IR)*B(IR) + CC(IR)*B(IR+1)
+            B(IR  ) = TEMP
+         end for ! IR
+c
+c        . Apply previous transformations to RT() for code testing.
+c
+         if(KPRINT  .ge. 3) then
+         do for IR = IGIV1, IGIV2
+            TEMP =     CC(IR)*RT(IR) + SS(IR)*RT(IR+1)
+            RT(IR+1) = -SS(IR)*RT(IR) + CC(IR)*RT(IR+1)
+            RT(IR  ) = TEMP
+         end for ! IR
+         endif !(KPRINT...)
+      end proc !( GIVENS ROTATIONS, USING IGIV1 AND IGIV2 )
+c     ------------------------------------------------------------------
+
+      procedure( GAUSSIAN ELIMINATION, USING IGAUS1 AND IGAUS2 )
+c
+c     This proc applies Gaussian elimination to pairs of rows,
+c     IS and IS+1, for IS = IGAUS1 .. IGAUS2.
+c
+         if(KPRINT .ge. 2) print '(1x,a,2i4)',
+     *   'Gauss elim in pairs of rows.  IGAUS1, IGAUS2 =',IGAUS1,IGAUS2
+         do for IS = IGAUS1, IGAUS2
+            JS=INDEX(IS)
+               if(abs(A(IS+1,JS)) .gt. abs(A(IS,JS))) then
+                  call DSWAP(N, A(IS,1),LDA, A(IS+1,1),LDA)
+                  TEMP = B(IS)
+                  B(IS) = B(IS+1)
+                  B(IS+1) = TEMP
+                  TEMP = RT(IS)
+                  RT(IS) = RT(IS+1)
+                  RT(IS+1) = TEMP
+               endif !(abs(A(IS+1,JS))...)
+               FAC = -A(IS+1,JS)/A(IS,JS)
+               call DAXPY(N, FAC, A(IS,1),LDA, A(IS+1,1),LDA)
+               A(IS+1,JS) = ZERO
+               B(IS+1) = FAC * B(IS) + B(IS+1)
+               RT(IS+1) = FAC * RT(IS) + RT(IS+1)
+         end for ! IS
+      end proc !( GAUSSIAN ELIMINATION, USING IGAUS1 AND IGAUS2 )
+c     ------------------------------------------------------------------
+
+      procedure( HOUSEHOLDER TRIANGULARIZATION )
+c
+c     Build new columns of triangular matrix indexed by IPUT1 thru IPUT2
+c     Last row to be affected is IRLAST.
+c
+      do for IPUT = IPUT1, IPUT2
+         JPUT = INDEX(IPUT)
+         call DHTCC(1,IPUT,IPUT+1,IRLAST,A(1,JPUT), UP,B,M,1)
+         if(KPRINT .ge. 4) print'(a,2i4/(5x,5g14.6))',
+     *      ' Hous Tri.. IPUT,IRLAST,B(IPUT:IRLAST)=',
+     *      IPUT,IRLAST,(B(I),I=IPUT,IRLAST)
+         do for I = IPUT+1, IF2
+            call DHTCC(2,IPUT,IPUT+1,IRLAST,A(1,JPUT), UP,
+     *                A(1,INDEX(I)),LDA,1)
+         end for ! I
+         if(KPRINT .ge. 3)
+     *       call DHTCC (2,IPUT,IPUT+1,IRLAST,A(1,JPUT),  UP,RT(1),M,1)
+         do for I = IPUT+1, IRLAST
+            A(I,JPUT) = ZERO
+         end for ! I
+      end for ! IPUT
+      if(KPRINT .ge. 3) do( DEBUG )
+      end proc !( HOUSEHOLDER TRIANGULARIZATION )
+c     ------------------------------------------------------------------
+
+      procedure( PREPARE ROW NSP1 TO BE OBJECTIVE FUNCTION )
+c
+c     Save current B(NSP1) into BSAVE.
+c     Set B(NSP1) to be the residual in row NSP1 for the current
+c     X vector.
+c     Do Gaussian elimination in row NSP1 using preceeding rows as
+c     pivot rows.  Don't need to apply the Gaussian elim in the B()
+c     vector because all of B(1:NSETS) is zero.
+c
+      BSAVE = B(NSP1)
+      B(NSP1) = B(NSP1) - DDOT(N, A(NSP1,1), LDA, X, 1)
+      do for IS = 1,NSETS
+         JS = INDEX(IS)
+         if(IS .gt. 1) then
+            A(NSP1,JS) = A(NSP1,JS) - DDOT(IS-1, Z(1),1, A(1,JS),1)
+         endif !(IS .gt. 1)
+         Z(IS) = A(NSP1,JS)/A(IS,JS)
+         A(NSP1,JS) = ZERO
+      end for ! IS
+      do for IF0 = IF1, IF2
+         JF = INDEX(IF0)
+         A(NSP1,JF) = A(NSP1,JF) - DDOT(NSETS, Z(1),1, A(1,JF),1)
+      end for ! IF0
+      end proc !( PREPARE ROW NSP1 TO BE OBJECTIVE FUNCTION )
+c     ------------------------------------------------------------------
+
+      procedure( ELIMINATE IN LOWER ROWS )
+c
+c     The equality constraint rows 1 thru M1 have been triangularized.
+c     Elimination in columns 1 thru IG1-1 in the lower matrix has been
+c     previously done.  Now eliminate in columns IG1 thru M1 of the
+c     lower matrix, i.e. in rows M1+1 through M.
+c
+      if(KPRINT .ge. 3) print '(1x/1x,a,2i4)',
+     * 'Gaussian elimination.  IG1,M1=',IG1,M1
+      do for IS = IG1, M1
+         JS = INDEX(IS)
+         LEN = 0
+         do for I = M, M1P1, -1
+            if(A(I,JS) .ne. ZERO) then
+               LEN = I - M1
+               exit for
+            endif !(A(I,JS)...)
+         end for ! I
+         if(LEN .ne. 0) then
+            FAC = -ONE/A(IS,JS)
+            do for I = IS+1, IF2
+               J = INDEX(I)
+               TEMP = FAC*A(IS,J)
+               call DAXPY(LEN, TEMP, A(M1P1,JS),1, A(M1P1,J),1)
+            end for ! IF0
+            TEMP = FAC*B(IS)
+            call DAXPY(LEN, TEMP, A(M1P1,JS),1, B(M1P1),1)
+            if(KPRINT .ge. 3)
+     *      call DAXPY(LEN, FAC * RT(IS), A(M1P1,JS),1, RT(M1P1),1)
+            do for I = M1P1, M1 + LEN
+               A(I,JS) = ZERO
+            end for ! I
+         endif !(ILAST...)
+      end for ! IS
+      if(KPRINT .ge. 3) do( DEBUG )
+      end proc !( ELIMINATE IN LOWER ROWS )
+c     ------------------------------------------------------------------
+      procedure( SOLVE TRIANGULAR SYSTEM, INPUT AND OUTPUT IN Z() )
+c
+c     .  Solve the triangular system defined by the column vectors
+c     .  indexed in Set S.  The right-side vector is given in
+c     .  Z(), and the solution vector will be returned in Z().
+c     .  It is assured that all diagonal terms are nonzero.
+c
+      do for IIS = NSETS, 1, -1
+          if(IIS .ne. NSETS) call DAXPY(IIS, -Z(IIS+1), A(1,JJS),1, Z,1)
+          JJS=INDEX(IIS)
+          Z(IIS)=Z(IIS)/A(IIS,JJS)
+      end for ! I
+      end proc !( SOLVE TRIANGULAR SYSTEM, INPUT AND OUTPUT IN Z() )
+c     ------------------------------------------------------------------
+
+      procedure( TERMINATION )
+c
+c                     Compute the norm of the final residual vector.
+c                     Clean up W().
+      RNORM = ZERO
+      if(IERR .le. 0 .or. IERR .ge. 3) then
+         I1 = max(M1P1, NSP1)
+         LEN = M - I1 + 1
+         if(LEN .gt. ZERO) then
+            RNORM = DNRM2(LEN, B(I1), 1)
+         else
+            do for J=1,N
+               W(J)=ZERO
+            end for ! J
+         endif !( LEN...)
+      endif !( IERR...)
+      end proc !( TERMINATION )
+c     ------------------------------------------------------------------
+
+      procedure( DEBUG )
+c
+      if(KPRINT .ge. 3) then
+         if(CMODE) then
+            MDB = M1
+         else
+            MDB = M
+         endif !(CMOODE)
+         call DCOPY(MDB, B,1, DIFF,1)
+         do for JD=1,N
+            call DAXPY(MDB, X(JD)-XT(JD), A(1,JD),1, DIFF,1)
+         end for ! JD
+         call DAXPY(MDB, -ONE, RT,1, DIFF,1)
+         print '(1x/1x,a)', 'Consistency test. DIFF()='
+         print '(1x,5g14.6)',(DIFF(ID),ID=1,MDB)
+      endif !(KPRINT...)
+      end proc !( DEBUG )
+c     ------------------------------------------------------------------
+      end program ! DBLSE

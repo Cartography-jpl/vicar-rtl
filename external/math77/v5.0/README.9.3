@@ -1,0 +1,17 @@
+   1992-07-28 CLL
+   Correct errors in write-up: Chap 9.3, Nonlinear Least-Squares,
+   dated April 9, 1992.
+
+   The subroutines do not return the final residual vector or the final
+   Jacobian matrix.  To obtain the final residual vector the user must
+   add code to compute the residual vector using the final solution
+   coefficients.  If using DNLAxx, this can be done just by calling
+   DCALCR.  If using DLNSxx, the user must call DCALCA to evaluate
+   the functions Phi sub (i,j) of Alpha, and then execute code that
+   uses these values, along with the final Beta's to compute residuals
+   using the formulas of Equations 3 or 4 of page 9.3-2.
+
+   All sentences, phrases, and table entries mentioning the symbolic
+   indices "j" and "r" as indices into the IV() array should be deleted
+   from the write-up.  On page 9.3-8 references occur in the table and
+   following "B.4.2".  On page 9.3-10 references occur in subsection B.4.2.

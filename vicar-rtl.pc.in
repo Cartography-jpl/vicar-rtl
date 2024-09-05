@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: vicar-rtl
+Description: VICAR RTL library
+Version: @VICAR_RTL_VERSION@
+Requires:
+Libs: -R${libdir} -L${libdir} -lvicar_rtl
+Cflags: -I${includedir}/vicar_rtl
+

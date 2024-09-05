@@ -1,0 +1,344 @@
+      SUBROUTINE DBESJN(X,ALPHA,NUM,BJ)
+NOINDENT
+INLINE(@)
+C     .  Copyright (C) 1989, California Institute of Technology.
+C     .  U. S. Government sponsorship under
+C     .  NASA contract NAS7-918 is acknowledged.
+C>> 1995-10-24 DBESJN Krogh  Removed blanks in numbers for C conversion.
+C>> 1994-10-19 DBESJN Krogh  Changes to use M77CON
+C>> 1994-04-19 DBESJN CLL  Edited to make DP & SP files similar.
+C>> 1992-03-13 DBESJN FTK  Removed implicit statements.
+C>> 1989-08-09 DBESJN CLL  More accurate HALFPI for Cray
+C>> 1986-03-18 DBESJN Lawson  Initial code.
+c--D replaces "?": ?BESJN, ?GAMMA, ?BESPQ, ?ERV1
+C
+C     COMPUTE THE J-BESSEL FUNCTIONS OF X FOR ORDER ALPHA THROUGH
+C     ALPHA + NUM - 1 in steps of one.
+C     STORE THE RESULT INTO BJ(I),I=1,...,NUM.
+C     Require X .ge. 0, ALPHA .ge. 0, NUM .ge. 1
+C
+c     Original code due to E. W. Ng and W. V. Snyder, JPL, 1973.
+c     Modified by Ng and S. Singletary, 1974.
+C     C.Lawson & S.Chan, JPL, 1984 Apr 05:
+c        Changed calling sequence.
+c        Adapted to SFTRAN3 and Fortran 77.
+c        Added code to avoid overflow during the recurrsion.
+c        Added code to use Taylor series for small x.
+c        March 23. Improved accuracy of backward recursion.
+c        Changed to use P and Q instead of R and THETA
+c                in the region of large X.
+C     ------------------------------------------------------------------
+C
+      SAVE EPS, SMALL, XPQ, BIG, HICUT
+c     ----------
+c     Subprograms used:  LOG10, SQRT, COS, SIN
+      EXTERNAL           DGAMMA, DBESPQ, D1MACH, ERMSG, DERV1, IERV1
+c     ----------
+      INTEGER I,I1,II,INT,J,K,M,MU,N20021,NMAX,NMIN,NPR001,NUM
+      DOUBLE PRECISION D1MACH, DGAMMA
+      DOUBLE PRECISION ALPHA,BESV,BESVM1,BESVP1,BIG,BJ(NUM),BJNU,BOT
+      DOUBLE PRECISION C11293,C16,C1P5,C59,CHI,CP6
+      DOUBLE PRECISION DR,EM,EMU,EPS,ETA,FAC,FAC2,FK,FKM1,FKP1,FV,FVM1
+      DOUBLE PRECISION FVP1,G,GNU,HALF,HALFPI,HALFX,HICUT
+      DOUBLE PRECISION ONE,P,Q,SCALE,SMALL,SUM,T1,T2,TENTH,TERM
+      DOUBLE PRECISION TERM1,TEST,TOP,TWO,TWODX,V,VPMU,X,XPQ,ZERO
+      parameter(ZERO=0.D0, ONE=1.D0, TWO=2.D0, C16=16.D0)
+      parameter( TENTH = 0.1D0, HALF = 0.5D0)
+      parameter(HALFPI = 1.57079632679489661923132169163975144D0)
+      parameter(C11293 = 1.1293D0, CP6 = 0.60206D0, C59 = 0.59D0)
+      parameter(C1P5 = 1.5D0)
+      data EPS / ZERO /
+C     ------------------------------------------------------------------
+INDENT
+C
+c     Set environment parameters.  This should happen only
+c     the first time this subroutine is called.
+c
+      IF( EPS .EQ. ZERO ) THEN
+         EPS = D1MACH(3)
+         HICUT = ONE /(EPS*C16)
+         XPQ = C11293 * (CP6 - LOG10(EPS)) - C59
+         SMALL = C16 * D1MACH(1) / EPS
+         BIG = D1MACH(2)/TWO
+      END IF
+C
+c     Test validity of input values.
+c
+      IF (X .LT. ZERO .OR. ALPHA .LT. ZERO .OR. NUM .LT. 1) THEN
+c
+c     >                                                      Error 1.
+        CALL ERMSG('DBESJN',1,0,
+     *             'REQUIRE X.GE.0, ALPHA.GE.0, NUM.GE.1',',')
+         DO( TRANSMIT X, ALPHA, AND NUM )
+        RETURN
+      END IF
+C
+c     Begin computation.
+c
+      NMIN = INT(ALPHA)
+      V = ALPHA - DBLE(NMIN)
+      NMAX = NMIN + NUM - 1
+C
+      IF( X .LE. TENTH ) THEN
+         DO( SMALL X )
+      ELSE IF( X .LT. MAX(DBLE(NMAX+1), XPQ) ) THEN
+         DO( MIDDLE X )
+      ELSE IF( X .LT. HICUT ) THEN
+         DO( LARGE X )
+      ELSE
+c     >                                             Error 2.
+         CALL ERMSG('DBESJN', 2, 0,
+     *   'Cannot obtain any accuracy when X exceeds HICUT.', ',')
+         CALL DERV1('HICUT', HICUT, ',')
+         DO( TRANSMIT X, ALPHA, AND NUM )
+      END IF @(X...)
+C
+      RETURN
+C
+C     ------------------------------------------------------------------
+C
+      PROCEDURE( SMALL X )
+C
+      IF( X .EQ. ZERO ) THEN
+c$                                        Special for X .eq. 0.
+         DO FOR I = 1, NUM
+            BJ(I) =  ZERO
+         END FOR
+         IF (ALPHA .EQ. 0) BJ(1) = ONE
+      ELSE
+c$                    Here use Taylor series for small x.
+C
+         GNU = ALPHA
+         HALFX = HALF*X
+         FAC2 = -HALFX*HALFX
+         TERM1 = (HALFX**GNU) / DGAMMA(GNU + ONE)
+         DO FOR I = 1, NUM
+            DO( SERIES FOR SMALL X )
+            BJ(I) = BJNU
+            IF( BJNU .EQ. ZERO ) THEN
+C
+c     Here current result has underflowed to zero, so we will
+c     set the rest of the results to zero also.
+c
+               DO FOR J = I+1, NUM
+                  BJ(J) = ZERO
+               END FOR @ J
+               EXIT FOR
+            END IF @( BJNU...)
+            GNU = GNU + ONE
+            TERM1 = TERM1 * (HALFX / GNU)
+         END FOR @ I
+      END IF @( X .EQ. ZERO )
+      END PROC @( SMALL X )
+C
+C     ------------------------------------------------------------------
+c
+      PROCEDURE( SERIES FOR SMALL X )
+C
+c     Sums the series for the Bessel fcn J sub GNU of X given
+c     in Eq 9.1.10, page 360, of AMS 55.
+c     Returns the value, BJNU.
+c      1984 March 9, JPL, C. L. Lawson.
+c
+      IF(TERM1 .EQ. ZERO) THEN
+         BJNU = ZERO
+         EXIT PROCEDURE
+      END IF
+c
+      SUM = ZERO
+      TOP = FAC2
+      BOT = GNU + ONE
+      T1 = ONE
+      T2 = BOT
+      TERM = TOP/BOT
+c
+      DO WHILE( ABS(TERM) .GT. EPS )
+         SUM = SUM + TERM
+         TOP = TOP * FAC2
+         T1 = T1 + ONE
+         T2 = T2 + ONE
+         BOT = BOT * T1 * T2
+         TERM = TOP/BOT
+      END WHILE
+c
+      BJNU = TERM1 + TERM1 * SUM
+      END PROC @( SERIES FOR SMALL X )
+c
+C     ------------------------------------------------------------------
+C
+      PROCEDURE( MIDDLE X )
+C
+C     J-TYPE BESSEL FUNCTIONS FOLLOW THE RECURRENCE RELATION
+C     F(V-1,X)=(2*V/X)*F(V,X)-F(V+1,X).
+C
+      TWODX = TWO / X
+      MU = MAX( INT(X)+1, NMAX)
+      DR = TWODX * (V+DBLE(MU))
+      FKP1 = ONE
+      FK =  ZERO
+C
+C     RECUR FORWARD UNTIL FKP1 IS GREATER THAN PRECISION OF ARITHMETIC.
+C
+      DO WHILE( EPS * ABS(FKP1) .LE. ONE )
+      MU = MU + 1
+      DR = DR + TWODX
+      FKM1 = FK
+      FK = FKP1
+      FKP1 = DR * FK - FKM1
+      END WHILE @(EPS...)
+C
+C     WE ARE NOW ASSURED THAT BACKWARD RECURRENCE FROM MU WILL YIELD
+C     ACCURATE RESULTS.
+C
+C                                        GUARANTEE EVEN MU
+      IF (MOD(MU,2) .NE. 0)  MU = MU + 1
+      FVM1 = SMALL
+      FV = ZERO
+      ETA = ONE
+      SUM = FVM1
+      M = MU / 2
+      EM = DBLE(M)
+      EMU = DBLE(MU)
+      FAC = (V + EMU) * TWODX
+C
+c     Set TEST = largest value that can be multiplied by
+c     FAC without risking overflow.  The present value of
+c     FAC is the largest that will occur during the recursion.
+c     TEST will be used to protect against overflow during
+c     the recursion.
+c
+      TEST = BIG / MAX(ONE, FAC)
+C
+C$                            Loop while MU .GT. ZERO
+C
+      DO FOREVER
+      FVP1 = FV
+      FV = FVM1
+      IF( ABS(FV) .GT. TEST ) DO( RESCALE )
+      FVM1 = FAC * FV - FVP1
+      MU = MU -1
+      EMU = EMU - ONE
+      FAC = (V + EMU) * TWODX
+      IF (MU .GE. NMIN .AND. MU .LE. NMAX) BJ(MU-NMIN+1) = FVM1
+      IF (MOD(MU,2) .EQ. 0) THEN
+        IF (V .EQ. ZERO)  THEN
+          SUM = SUM + FVM1
+          IF (MU .EQ. 0) THEN
+            SCALE = ONE / SUM
+            EXIT FOREVER
+          END IF
+          SUM = SUM + FVM1
+        ELSE
+          IF (MU .NE. 0) THEN
+            VPMU = V + EMU
+            ETA = ETA * (EM/(V + (EM-ONE))) * (VPMU / (VPMU + TWO))
+            SUM = SUM + FVM1 * ETA
+            EM = EM - ONE
+          ELSE
+c
+c           Here MU = 0 and EM = 0NE.  Thus the expression for
+c           updating ETA reduces to the following simpler
+c           expression.
+c
+            ETA = ETA / (V + TWO)
+            SUM = SUM + FVM1 * ETA
+            SCALE = DGAMMA(V+ONE) / ETA * SUM * TWODX ** V
+            SCALE = ONE / SCALE
+            EXIT FOREVER
+          END IF @(MU .NE. 0)
+        END IF @(V .EQ. ZERO)
+      END IF @(MOD(MU,2)...)
+      END FOREVER
+C
+C     NORMALIZE BJ() TO GET VALUES OF J-BESSEL FUNCTION.
+C
+      DO FOR I = 1, NUM
+         BJ(I) = BJ(I) * SCALE
+      END FOR @ I
+      END PROC @( MIDDLE X )
+C
+C     ------------------------------------------------------------------
+C
+      PROCEDURE( RESCALE )
+C
+      FV = FV / SUM
+      FVP1 = FVP1 / SUM
+      I1 = MAX( 1, MU - NMIN + 1 )
+      DO FOR II = I1, NUM
+         BJ(II) = BJ(II) / SUM
+      END FOR @ II
+      SUM = ONE
+      END PROC @( RESCALE )
+C
+C     ------------------------------------------------------------------
+C
+      PROCEDURE( LARGE X )
+C
+c     >     Here we have X .ge. XPQ, and V in [0.,1.).
+c     The asymptotic series for
+c     the auxiliary functions P and Q can be used.
+c     From these we will compute J(V,X) and J(V+1,X) and
+c     then recur forward.
+c     Reference: NBS AMS 55 Eqs 9.2.5 & 9.2.6
+c
+      CALL DBESPQ (X,V,  P,Q)
+      CHI = X - (V + HALF) * HALFPI
+      BESV = SQRT(ONE / (HALFPI*X)) * (P*COS(CHI) - Q*SIN(CHI))
+C
+      IF( NMAX .GT. 0 ) THEN
+         CALL DBESPQ (X,V+ONE,   P,Q)
+         CHI = X - (V + C1P5) * HALFPI
+         BESVP1 = SQRT(ONE / (HALFPI*X)) * (P*COS(CHI) - Q*SIN(CHI))
+      END IF @(NMAX .GT. 0)
+c
+      TWODX = TWO / X
+      DO( FORWARD RECURSION )
+      END PROC @( LARGE X )
+C     ------------------------------------------------------------------
+c
+      PROCEDURE( FORWARD RECURSION )
+c
+c     >     Given BESV = J(V,X), BESVP1 = J(V+1,X), TWODX = 2/X,
+c     NMIN, NUM, NMAX = NMIN + NUM -1,
+c     X, ALPHA, and BIG.
+c     Recur forward and store J(NMIN+V) thru J(NMAX+V) in
+c     BJ(1) thru BJ(NUM).
+c     >     There should be no overflow posibility in
+c     this forward recursion since NMAX .le. X - 1, and
+c     in this region the magnitude of the J function is
+c     less than one.
+c
+      IF( NMIN .EQ. 0 ) THEN
+         BJ(1) = BESV
+         IF( NMAX .GT. 0 ) THEN
+            BJ(2) = BESVP1
+         END IF @(NMAX .GT. 0)
+      ELSE IF( NMIN .EQ. 1 ) THEN
+         BJ(1) = BESVP1
+      END IF @( NMIN...)
+c
+      IF( NMAX .GT. 1 ) THEN
+         G = V * TWODX
+c
+c        Note:  In the following statement, 3-NMIN can be nonpositive.
+c
+         DO FOR K = 3-NMIN, NUM
+            BESVM1 = BESV
+            BESV   = BESVP1
+            G = G + TWODX
+            BESVP1 = G * BESV - BESVM1
+            IF( K .GE. 1)  BJ(K) = BESVP1
+         END FOR @ I
+      END IF @( NMAX .GT. 1)
+      END PROC @( FORWARD RECURSION )
+C
+C     ------------------------------------------------------------------
+C
+      PROCEDURE( TRANSMIT X, ALPHA, AND NUM )
+C
+        CALL DERV1('X',X,',')
+        CALL DERV1('ALPHA',ALPHA,',')
+        CALL IERV1('NUM',NUM,'.')
+      END PROC @( TRANSMIT X, ALPHA, AND NUM )
+C     ------------------------------------------------------------------
+      END PROGRAM

@@ -1,0 +1,9 @@
+#  The files in this directory are for the Cray version of Math77
+#  that is compiled with the "-dp" option.  The files dint*.f should
+#  NOT be compiled with the "-dp" option -- they are the same as the
+#  corresponding sint*.f, except the names SINT* are changed to DINT*.
+#  There are still four double precision variables, but it is important
+#  they remain as such: ACUM, PACUM, RESULT and EDMEPS.  DON'T use
+#  files dint*.f from the usual Math77 library, compiled with the
+#  "-dp" option.  They won't work.  DON'T clobber the dint*.f files in
+#  the usual Math77 library with files in this directory.

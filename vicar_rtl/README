@@ -1,0 +1,5 @@
+We create symbolic link's here to the various .am files that we need to
+include in vicar_rtl. This is so that we can use vicar_rtl.am either 
+stand alone, or in the AFIDS build. It is unfortunate, but automake
+doesn't support variables in "include" lines, so there is no other way
+to do this.

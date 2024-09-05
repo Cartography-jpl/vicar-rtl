@@ -1,0 +1,2149 @@
+\newpage
+\section{Error Messages}
+\label{errors}
+\subsection{Error message format}
+This section describes the meaning of the VICAR error messages.
+VICAR error messages are given in the following form:
+\begin{quote}
+[VIC2--{\em key}] {\em message}
+\end{quote}
+where VIC2 indicates that the message was issued from the VICAR2
+package, and {\em key} is the specific key or identifier for the message
+given.  The message key may be used to ask for help with the
+HELP-MESSAGE command in the VICAR supervisor or to look up a message
+in this section.  In addition, the key is stored internally by the 
+supervisor, so that by simply typing a question mark (?) to the 
+prompt, help on the last error message given is received.
+\subsection{Messages by key}
+This section lists VICAR2 error messages in alphabetical order by
+key.  The accompanying message, the numerical value, and the symbolic
+name by which the error may be referenced in a program are given,
+followed by a detailed description of what the message means, and the
+action required to correct the error.
+
+\begin{enumerate}
+
+\item ALROPN Symbolic Name: FILE\_IS\_ALREADY\_OPEN
+
+[VIC2-ALROPN] Attempt to open an open file; program error
+
+Explanation:
+
+XVOPEN has been called on a file which is already open.
+This is a program error.
+
+User action:
+
+Please notify the cognizant programmer.
+
+
+\item BADBAND Symbolic Name: IMPROPER\_BAND\_SIZE\_PARAM
+
+[VIC2-BADBAND] Improper band size parameter; program error
+
+Explanation:
+
+A band size argument (BAND, NBANDS, U\_NB) was provided to the
+indicated routine and was not in an allowable range (usually less
+than zero).
+
+User action:
+
+Check all the parameters which could have led to the bad sample size.
+If they are good, it is probably a program error and the cognizant
+programmer should be consulted.
+
+
+\item BADBINSIZ Symbolic Name: IMPROPER\_BINARY\_SIZE\_PARAM
+
+[VIC2-BADBINSIZ] Improper binary size parameter; program error
+
+Explanation:
+
+A binary size argument (U\_NBB or U\_NLB) was provided to the
+indicated routine that was not in an allowable range (usually
+less than zero).
+
+User action:
+
+Check all the parameters which could have led to the bad binary
+size.  If they are good, it is probably a program error and the
+cognizant programmer should be consulted.
+
+
+\item BADCVT Symbolic Name: IMPROPER\_CONVERT\_SETTING
+
+[VIC2-BADCVT] Improper CONVERT or BIN\_CVT string; program error
+
+Explanation:
+
+The CONVERT or BIN\_CVT optional parameter had an invalid value
+associated with it in the indicated routine.  This is a program error.
+
+User action:
+
+Please consult the cognizant programmer so that the value of
+CONVERT and BIN\_CVT can be checked.
+
+Programmer action:
+
+The only valid values for CONVERT and BIN\_CVT are ``ON'' and ``OFF''.
+Check that the call to XVOPEN or XVADD uses one of these values.
+
+
+\item BADDIM Symbolic Name: IMPROPER\_DIMENSION
+
+[VIC2-BADDIM] Improper dimension; program error
+
+Explanation:
+
+The value for the image dimension supplied to the VICAR
+I/O routines was not a valid value.
+
+User action:
+
+If the image dimension was specified on the command line,
+verify that it is in the proper range (greater than zero and
+less than the maximum allowable dimension, which is currently 4).
+If it was not given on the command line, consult the cognizant programmer.
+
+
+\item BADELEM Symbolic Name: IMPROPER\_ELEMENT\_NUMBER
+
+[VIC2-BADELEM] Improper element number; program error
+
+Explanation:
+
+A value for ELEMENT or NELEMENTS was provided to a label routine
+that was not in the allowable range (usually less than zero).
+
+User action:
+
+Check all the parameters which could have led to the bad element
+number.  If they are good, it is probably a program error and the
+cognizant programmer should be consulted.
+
+
+\item BADFILE Symbolic Name: IMPROPER\_FILE\_NUMBER
+
+[VIC2-BADFILE] Bad file number for tape
+
+Explanation:
+
+The U\_FILE optional is less than zero.
+
+User action:
+
+This is a program error.  Please consult the cognizant programmer.
+
+Programmer action:
+
+Check the value of U\_FILE.
+
+
+\item BADFOR Symbolic Name: IMPROPER\_FORMAT\_STRING
+
+[VIC2-BADFOR] Improper FORMAT string; program error
+
+Explanation:
+
+The pixel format being passed to the indicated routine is not
+one of the valid values.  This is a program error.
+
+User action:
+
+Please consult the cognizant programmer to verify that a
+valid format string is being passed.
+
+Programmer action:
+
+Make sure that the FORMAT argument to the indicated routine
+is one of following values:  BYTE, HALF, FULL, REAL, DOUB, or COMP.
+
+
+\item BADHOST Symbolic Name: INVALID\_HOST
+
+[VIC2-BADHOST] Invalid HOST string
+
+Explanation:
+
+An invalid value was given for the HOST argument for XVHOST.
+
+User action:
+
+If the HOST name was a program parameter, verify that the name of the
+host is correct and is a supported host.  The currently supported hosts
+are:
+
+ALLIANT          Alliant FX series computer.
+CRAY             Cray (port is incomplete).
+DECSTATN         DECstation (any DEC RISC machine) running Ultrix.
+HP-700           HP 9000/700 series workstation.
+MAC-AUX          Macintosh running A/UX.
+MAC-MPW          Macintosh running native mode with Mac Programmers Workbench.
+SGI              Silicon Graphics workstation.
+SUN-3            Sun 3, any model.
+SUN-4            Sun 4 or SPARCstation, or clone such as Solbourne.
+TEK              Tektronix workstation.
+VAX-VMS          VAX running VMS.
+
+NATIVE or LOCAL  The currently running machine
+
+Programmer action:
+
+Check that the value being passed in to XVHOST is valid and in the
+above list.  If the desired machine is not supported, contact the
+VICAR executive programmer about doing a port.
+
+
+\item BADINST Symbolic Name: ILLEGAL\_INSTANCE
+
+[VIC2-BADINST] Illegal instance; program error
+
+Explanation:
+
+In a call to XVUNIT, the value given for the INSTANCE argument
+is greater than the actual number of files given in the corresponding
+parameter.
+
+User action:
+
+Verify that all the proper parameters have been input.  If they have,
+then this message indicates that a program error has occurred and
+the cognizant programmer should be consulted.
+
+Programmer action:
+
+Modify the PDF to require that the user input the appropriate
+number of files.
+
+
+\item BADINTFMT Symbolic Name: IMPROPER\_INTFMT
+
+[VIC2-BADINTFMT] Invalid INTFMT or BINTFMT string
+
+Explanation:
+
+An invalid value was given for INTFMT or BINTFMT, either as an optional
+argument to XVOPEN, XVADD, or XVGET, as an argument to one of the XVTRANS
+routines, or in the input label.
+
+User action:
+
+Verify that the input file has a valid value for INTFMT and BINTFMT.
+If the problem is not obvious, consult the cognizant programmer.
+
+Programmer action:
+
+Check that all INTFMT and BINTFMT values are valid.  Currently, the valid
+values are ``LOW'' and ``HIGH''.  If you are working on a machine with a
+different integer representation, please consult the VICAR executive
+programmer about adding it to the system.
+
+
+\item BADLBL Symbolic Name: BAD\_INPUT\_LABEL
+
+[VIC2-BADLBL] Bad input label; check file contents
+
+Explanation:
+
+An error occurred while parsing the input label.  Either the
+file has no valid VICAR label, or the label is corrupted.
+
+User action:
+
+If the file has no label, LABEL-CREATE may be used to create one.
+If the file has a label but this error still occurs, then the
+label has probably been corrupted, which could be due to problems
+transferring the file if it came from a foreign system, or it could
+indicate an executive error.  In the latter case, consult the VICAR
+system programmer.
+
+
+\item BADLBLTP Symbolic Name: BAD\_LABEL\_TYPE
+
+[VIC2-BADLBLTP] Bad label type; check file contents
+
+Explanation:
+
+A label type other than ``HISTORY'', ``SYSTEM'', or ``PROPERTY'' has
+been input to the indicated routine, or neither has been specified.
+
+User action:
+
+The validity of the label type must be checked.  Please consult
+the cognizant programmer.
+
+Programmer action:
+
+Verify that the call to the indicated routine used the values
+``HISTORY'', ``SYSTEM'', or ``PROPERTY'' for the label type.
+
+
+\item BADLEN Symbolic Name: IMPROPER\_LENGTH
+
+[VIC2-BADLEN] Improper length; program error
+
+Explanation:
+
+ULEN was either required for the indicated routine and not
+given, or it was given an invalid value.
+
+User action:
+
+The size and existence of the value given to ULEN must be
+checked. Please consult the cognizant programmer.
+
+Programmer action:
+
+The value of ULEN must be positive and less than the maximum
+string size.  It is required to be given for multi-valued string
+items passed from C, and all string items (multi-valued or single
+value) passed from FORTRAN declared with a BYTE or LOGICAL*1.
+Strings passed from FORTRAN declared as CHARACTER do not require
+the ULEN optional.
+
+
+\item BADLINE Symbolic Name: IMPROPER\_LINE\_SIZE\_PARAM
+
+[VIC2-BADLINE] Improper line size parameter; program error
+
+Explanation:
+
+A line size argument (LINE, NLINES, U\_NL) was provided to the
+indicated routine and was not in an allowable range (usually less
+than zero).
+
+User action:
+
+Check all the parameters which could have led to the bad sample size.
+If they are good, it is probably a program error and the cognizant
+programmer should be consulted.
+
+
+\item BADLINST Symbolic Name: IMPROPER\_LABEL\_INSTANCE
+
+[VIC2-BADLINST] Improper label instance number; program error
+
+Explanation:
+
+An INSTANCE number was provided to a label routine that was not
+in the allowable range (usually less than zero).
+
+User action:
+
+Check all the parameters which could have led to the bad instance.
+If they are good, it is probably a program error and the cognizant
+programmer should be consulted.
+
+
+\item BADMETH Symbolic Name: IMPROPER\_METHOD\_STRING
+
+[VIC2-BADMETH] Improper METHOD string; program error
+
+Explanation:
+
+The METHOD optional argument contained an invalid value for the
+routine indicated.  This is a program error.  The valid values for
+METHOD are ``RANDOM'' and ``SEQ''.
+
+User action:
+
+Please consult the cognizant programmer so that the value of
+METHOD can be checked.
+
+
+\item BADMODESTR Symbolic Name: IMPROPER\_MODE\_STRING
+
+[VIC2-BADMODESTR] Improper MODE string; program error
+
+Explanation:
+
+The MODE optional parameter had an invalid value associated
+with it in the indicated routine.  This is a program error.
+
+User action:
+
+Please consult the cognizant programmer so that the value of
+MODE can be checked.
+
+Programmer action:
+
+The only valid values for MODE are ``ADD'', ``INSERT'',
+and ``REPLACE''.  Check that the call to XVOPEN or XVADD uses
+one of these values.
+
+
+\item BADNAM Symbolic Name: BAD\_FILE\_PARAM\_NAME
+
+[VIC2-BADNAM] Bad file parameter name; program error
+
+Explanation:
+
+An error was encountered when XVUNIT tried to look up a file
+name in the command line.  This error probably indicates a
+mismatch between the program and the PDF file associated with it,
+and usually has to do with the ``INP'' or ``OUT'' parameters.
+
+User action:
+
+Please consult the cognizant programmer so that any
+disparity between the program and the PDF can be corrected.
+
+
+\item BADOPR Symbolic Name: IMPROPER\_OPERATION
+
+[VIC2-BADOPR] Operation conflicts with open attributes; program error
+
+Explanation:
+
+Improper operation.  The program tried to perform an operation
+on the indicated file which is forbidden in the mode in which
+the file has been opened.  For instance, trying to write to a
+file which has been opened for READ would cause this error.
+
+User action:
+
+This is generally a program error.  Consult the cognizant
+programmer for the program in question.
+
+
+\item BADOPSTR Symbolic Name: IMPROPER\_OP\_STRING
+
+[VIC2-BADOPSTR] Improper OP string; program error
+
+Explanation:
+
+The OP optional parameter had an invalid value associated with
+it in the indicated routine.  This is a program error.
+
+User action:
+
+Please consult the cognizant programmer so that the value of
+OP can be checked.
+
+Programmer action:
+
+The only valid values for OP are ``READ'', ``WRITE'', and
+``UPDATE''.  Check that the call to XVOPEN or XVADD uses one
+of these values.
+
+
+\item BADORG Symbolic Name: BAD\_ORG
+
+[VIC2-BADORG] ORG keyword (file organization) is not valid.
+
+Explanation:
+
+The file organization keyword ORG passed to the indicated
+routine is not one of the valid values.  The valid file
+organizations are ``BSQ'' (Band SeQuential), ``BIL'' (Band
+Interleaved by Line), and ``BIP'' (Band Interleaved by Pixel).
+
+User Action:
+
+This is a program error, so notify the cognizant programmer.
+
+
+\item BADPARINST Symbolic Name: BAD\_PARAM\_INSTANCE
+
+[VIC2-BADPARINST] Parameter instance not found in XVPONE
+
+Explanation:
+
+The instance given to the routine XVPONE (or XVIPONE) was not found
+in the parameters.
+
+User action:
+
+Verify that all parameters have been given enough values.  If the
+problem is not obvious, consult the cognizant programmer.
+
+Programmer action:
+
+Check the counts in the PDF to ensure that the user inputs all
+required values.  For optional values, use XVPCNT to get the
+number of values given before calling XVPONE.
+
+
+\item BADREALFMT Symbolic Name: IMPROPER\_REALFMT
+
+[VIC2-BADREALFMT] Invalid REALFMT or BREALFMT string
+
+Explanation:
+
+An invalid value was given for REALFMT or BREALFMT, either as an optional
+argument to XVOPEN, XVADD, or XVGET, as an argument to one of the XVTRANS
+routines, or in the input label.
+
+User action:
+
+Verify that the input file has a valid value for REALFMT and BREALFMT.
+If the problem is not obvious, consult the cognizant programmer.
+
+Programmer action:
+
+Check that all REALFMT and BREALFMT values are valid.  Currently, the
+valid values are ``VAX'', ``IEEE'', and ``RIEEE''.  If you are working
+on a machine with a different floating-point representation, please
+consult the VICAR executive programmer about adding it to the system.
+
+
+\item BADSAMP Symbolic Name: IMPROPER\_SAMP\_SIZE\_PARAM
+
+[VIC2-BADSAMP] Improper sample size parameter; program error
+
+Explanation:
+
+A sample size argument (SAMP, NSAMPS, U\_NS) was provided to the
+indicated routine and was not in an allowable range (usually less
+than zero).
+
+User action:
+
+Check all the parameters which could have led to the bad sample size.
+If they are good, it is probably a program error and the cognizant
+programmer should be consulted.
+
+
+\item BADSIZ Symbolic Name: IMPROPER\_IMAGE\_SIZE\_PARAM
+
+[VIC2-BADSIZ] Improper image size parameter; program error
+
+Explanation:
+
+A size argument (U\_N1, U\_N2, U\_N3, or U\_N4) was provided to the
+indicated routine that was not in an allowable range
+(usually less than zero).
+
+User action:
+
+Check all the parameters which could have led to the bad size.
+If they are good, it is probably a program error and the cognizant
+programmer should be consulted.
+
+
+\item BADTRANS Symbolic Name: INVALID\_FORMAT\_TRANSLATION
+
+[VIC2-BADTRANS] Invalid format translation
+
+Explanation:
+
+The data translation specified, either data type or host
+format (or both), is not legal.  Currently there are some
+restrictions on host translations allowed with the DOUB data format.
+
+User action:
+
+Make sure you specified the correct file.  If it is in a foreign
+host format, try converting it to the machine's native format
+and run the program again.
+
+Programmer action:
+
+Notify the VICAR executive programmer if you need the particular
+translation to be implemented.
+
+
+\item BADUPDHIST Symbolic Name: IMPROPER\_UPD\_HIST\_SETTING
+
+[VIC2-BADUPDHIST] Improper UPD\_HIST string; program error
+
+Explanation:
+
+The UPD\_HIST optional parameter had an invalid value
+associated with it in the indicated routine.  This is a program error.
+
+User action:
+
+Please consult the cognizant programmer so that the value of
+UPD\_HIST can be checked.
+
+Programmer action:
+
+The only valid values for UPD\_HIST are ``ON'' and ``OFF''.
+Check that the call to XVOPEN uses one of these values.
+
+
+\item BLTYPELONG Symbolic Name: BLTYPE\_TOO\_LONG
+
+[VIC2-BLTYPELONG] BLTYPE name too long; program error
+
+Explanation:
+
+The binary label type name given on the BLTYPE optional has exceeded the
+maximum string size allowed (11 characters).
+
+User action:
+
+Consult the cognizant programmer.
+
+
+\item BUG Symbolic Name: INTERNAL\_ERROR
+
+[VIC2-BUG] Internal VICAR bug check failure - Notify system programmer
+
+Explanation:
+
+An internal bug check in the VICAR run-time library failed,
+indicating a bug in the run-time library.
+
+User Action:
+
+This error should never occur, hence please notify the
+VICAR system programmer immediately.
+
+
+\item CONVERR Symbolic Name: CONVERSION\_ERROR
+
+[VIC2-CONVERR] Conversion error; program error
+
+Explanation:
+
+The data item passed to the indicated routine is incompatible
+with the FORMAT parameter.  For example, an integer is expected
+and a real is passed.
+
+User action:
+
+If the parameter is user specified check to see that the data
+item being passed to the routine is in the expected format.
+If the problem is still not obvious, consult the cognizant programmer.
+
+Programmer action:
+
+Check the value of the item passed to the indicated routine.
+
+
+\item DUPKEY Symbolic Name: DUPLICATE\_KEY
+
+[VIC2-DUPKEY] Duplicate key; program error
+
+Explanation:
+
+An attempt has been made to add a label item with the label routine
+XLADD, mode ``ADD'', for a key that already exists.  A duplicate
+item cannot be added under the same HISTORY subset, the same PROPERTY
+subset, or the SYSTEM label.  To modify an existing item, use XLADD
+with mode ``REPLACE''.
+
+User action:
+
+If the item is user specified a new subset must be created to
+accept the item, or the label item must be replaced instead of
+added.  If the item is not user specified and this message is
+displayed, consult the cognizant programmer.
+
+
+\item ENDOFVOL Symbolic Name: END\_OF\_VOLUME
+
+[VIC2-ENDOFVOL] End of volume (double tape mark) reached
+
+Explanation:
+
+The end of volume mark (double tape mark or double end of
+file) was hit when trying to open a file on an input tape.
+
+User action:
+
+Scan the tape to determine the actual number of files on it,
+and make sure that the program does not try to access a file
+beyond that number.
+
+
+\item EOF Symbolic Name: END\_OF\_FILE
+
+[VIC2-EOF] End of file
+
+
+Explanation:
+
+The end of file was reached.  For input disk files, this error
+probably indicates an attempt to read beyond the number of lines
+in the image.  Otherwise, this  error indicates that the physical
+end of file was reached on an I/O operation.
+
+User action:
+
+This could be either a user or a programmer error.  Verify that
+all the parameters to the program in question are good values,
+and that the input file is correct, i.e. not truncated or
+mangled.  If the file is okay, consult the cognizant programmer.
+
+
+\item EOLAB Symbolic Name: END\_OF\_LABEL
+
+[VIC2-EOLAB] End of label
+
+Explanation:
+
+You have reached the end of the label on an XLNINFO.  This is an
+informational message which is normally used as a flag within a routine.
+
+User action:
+
+If this message is displayed consult the cognizant programmer.
+
+
+\item ERRACT Symbolic Name: BAD\_ERR\_ACT\_VALUE
+
+[VIC2-ERRACT] Bad error action; program error
+
+Explanation:
+
+The optional arguments OPEN\_ACT, IO\_ACT, LBL\_ACT, and ERR\_ACT,
+as well as the error action argument to XVEACTION, must contain
+the characters ``U'', ``A'', or ``S'', or any combination thereof.
+
+User action:
+
+Please consult the cognizant programmer.
+
+Programmer action:
+
+Verify that the error action argument contains only the characters
+``U'', ``S'', and ``A'', alone or in any combination.
+
+
+\item FILETYPE Symbolic Name: BAD\_FILE\_TYPE
+
+[VIC2-FILETYPE] Invalid file type
+
+Explanation:
+
+The file type (the TYPE optional to the indicated routine) is not
+a supported type.  Currently the types supported are ``IMAGE'',
+``PARMS'', ``PARM'', and ``PARAM'', and the IBIS types ``GRAPH1'',
+``GRAPH2'', ``GRAPH3'', and ``TABULAR''.
+
+User action:
+
+If the file type was specified on the command line (e.g., you tried
+to use LABEL-REPLACE to change it), then use one of the valid types.
+Otherwise, it may be a program error.
+
+Programmer action:
+
+Use only the valid types listed above.
+
+
+\item FNDKEY Symbolic Name: CANNOT\_FIND\_KEY
+
+[VIC2-FNDKEY] Cannot find key; program error
+
+Explanation:
+
+The indicated routine is unable to find the specified key
+in the label.
+
+User action:
+
+If the key is user specified, or if you know what keys the
+program is looking for, check the label to verify that the
+label item exists.  If, after checking, the problem is not
+obvious, consult the cognizant programmer.
+
+
+\item FORREQ Symbolic Name: FORMAT\_OPTIONAL\_REQUIRED
+
+[VIC2-FORREQ] The FORMAT optional is required with XLADD
+
+Explanation:
+
+The FORMAT optional to XLADD cannot be defaulted.
+
+User action:
+
+Consult the cognizant programmer.
+
+Programmer action:
+
+Enter the desired FORMAT on the XLADD call.
+
+
+\item HOSTLONG Symbolic Name: HOST\_TOO\_LONG
+
+[VIC2-HOSTLONG] HOST or BHOST name too long; program error
+
+Explanation:
+
+The host name given on the HOST or BHOST optional has exceeded the
+maximum string size allowed (11 characters).
+
+User action:
+
+Consult the cognizant programmer.
+
+
+\item HSTNTASC Symbolic Name: HIST\_NAME\_HAS\_NON\_ASCII\_CHAR
+
+[VIC2-HSTNTASC] History name has non-ASCII characters; program error
+
+Explanation:
+
+The value for the label processing optional HIST has a non-ASCII
+character.  The HIST item (task name) must be a valid ASCII string,
+8 characters or less in length.
+
+User action:
+
+This is most likely a program error.  Please consult the
+cognizant programmer.  It could, however, be due to a corrupted
+history label in one of the input files.
+
+
+\item ILLFOREQ Symbolic Name: ILLEGAL\_FORMAT\_REQUEST
+
+[VIC2-ILLFOREQ] Illegal format request; program error
+
+Explanation:
+
+The type of a label item is not ``STRING'', ``INT'', ``REAL'',
+or ``DOUB''.
+
+User action:
+
+Consult the cognizant programmer so that the validity of
+the type specified can be checked.
+
+
+\item INSUFMEM Symbolic Name: INSUFFICIENT\_MEMORY
+
+[VIC2-INSUFMEM] Insufficient memory; consult system programmer
+
+Explanation:
+
+Insufficient memory for operation.  VICAR was not able to allocate
+sufficient memory for an internal function.
+
+User action:
+
+This error probably indicates a memory quota was exceeded.
+See the system manager or system programmer to determine the
+exact cause and perhaps increase the amount of memory available.
+
+
+\item INVCMPR Symbolic Name: INVALID\_COMPRESSION\_TYPE
+
+[VIC2-INVCMPR] Undefined compression type
+
+Explanation:
+
+The compression name specified has not been implemented in VICAR
+and is unrecognized.
+
+User action:
+
+Make sure the compression name is correct.
+
+Programmer action:
+
+Make sure the compression name is correct.  If it is, the compression
+may not have been implemented correctly.
+
+
+\item LNGACT Symbolic Name: ACT\_STRING\_TOO\_LONG
+
+[VIC2-LNGACT] ACT string too long; program error
+
+Explanation:
+
+The value for the optional argument CLOS\_ACT is longer than
+the maximum number of allowed characters (132).
+
+User action:
+
+Please consult the cognizant programmer.
+
+Programmer action:
+
+Verify that the string passed with CLOS\_ACT is the proper length.
+
+
+\item LNGCOND Symbolic Name: COND\_STRING\_TOO\_LONG
+
+[VIC2-LNGCOND] COND string too long; program error
+
+Explanation:
+
+The value for a COND optional argument has exceeded the maximum
+number of allowable characters.
+
+User action:
+
+Please consult the cognizant programmer.
+
+Programmer action:
+
+Check the COND optional argument in the indicated routine
+and verify that it is within the allowable string length (132).
+
+
+\item LNGMESS Symbolic Name: ERR\_MESS\_TOO\_LONG
+
+[VIC2-LNGMESS] Error message too long; program error
+
+Explanation:
+
+The error message given on a *\_MESS optional has exceeded the
+maximum string size allowed (132 characters).
+
+User action:
+
+Consult the cognizant programmer.
+
+
+\item MODINPLBL Symbolic Name: CAN\_NOT\_MODIFY\_AN\_INPUT\_LABEL
+
+[VIC2-MODINPLBL] Attempt to modify input label; program error
+
+Explanation:
+
+An attempt was made to modify the label of a read-only file.
+
+User action:
+
+Consult the cognizant programmer.
+
+
+\item MODOPNUN Symbolic Name: CANNOT\_MOD\_OPEN\_UNIT
+
+[VIC2-MODOPNUN] An open unit cannot be modified; call XVCLOSE first
+
+Explanation:
+
+An attempt to call the routine XVADD was made after a unit was
+already open.  In order to prevent the internal table from being
+corrupted, this operation is defined as illegal.
+
+User action:
+
+Consult the cognizant programmer.
+
+Programmer action:
+
+Prevent the calling of XVADD after a unit has been opened.
+NL may be updated by using only XLADD, and other fields may
+not be modified after a unit is opened.
+
+
+\item MULTPARMFILE Symbolic Name: MULTIPLE\_PARAMETER\_FILES
+
+[VIC2-MULTPARMFILE] Multiple parameter files cannot be open at once
+
+Explanation:
+
+An attempt was made to open a parameter file before the previous
+one was closed.  Only one parameter file can be open at a time.
+
+User action:
+
+This is a program error.  Consult the cognizant programmer.
+
+Programmer action:
+
+Finish processing one parameter file before using another.
+Make sure that all parameter files are closed using XVPCLOSE.
+XVCLOSE will not properly close a parameter file.
+
+
+\item NOARRAY Symbolic Name: ARRAY\_IO\_NOT\_ALLOWED
+
+[VIC2-NOARRAY] Array i/o not allowed to non-disk device
+
+Explanation:
+
+An attempt was made to open a non-disk file for array I/O.
+The program being used was designed only to work on disk files.
+
+User action:
+
+Use a disk file for the file on which the program failed.
+
+
+\item NOEFLG Symbolic Name: UNABLE\_TO\_ACQUIRE\_AN\_EVENT\_FLAG
+
+[VIC2-NOEFLG] Unable to get an event flag; re-try or consult system programmer
+
+Explanation:
+
+Unable to acquire an event flag.  The VICAR Run-Time Library
+I/O routines need event flags to control the open files.
+This error generally means that the system provided event
+flags are all being used.
+
+User action:
+
+This is probably a program error, caused by having too many
+files open at once or by using event flags for some other
+purpose.  Consult the cognizant programmer.
+
+
+\item NOFREUN Symbolic Name: NO\_FREE\_UNITS
+
+[VIC2-NOFREUN] No free units available
+
+No free units.
+
+Explanation:
+
+The maximum number of units has been reached.  This error generally
+means that too many files are opened at once.
+
+User action:
+
+Consult the cognizant programmer for the program in which the
+error occurred and determine whether or not it is a program error.
+If not, consult the system programmer.
+
+Programmer action:
+
+Reduce the number of files open simultaneously.  If you are opening
+and closing many files but not many are open at once, use the
+``CLOS\_ACT'', ``FREE'' optional on XVCLOSE to free the unit
+number for re-use when you close the file.
+
+
+\item NOKEY Symbolic Name: NO\_SUCH\_KEY
+
+[VIC2-NOKEY] No such key in the indicated task
+
+Explanation:
+
+The indicated routine is unable to find the specified key in the
+label.  This can be either a user or programmer error.
+
+User action:
+
+If the key is user specified, check the label to verify that the
+label item exists.  If, after checking, the problem is not obvious,
+consult the cognizant programmer.
+
+
+\item NOLAB Symbolic Name: FILE\_HAS\_NO\_LABEL
+
+[VIC2-NOLAB] File has no label; check file contents
+
+Explanation:
+
+Input file does not contain a valid VICAR label.
+
+User action:
+
+Check file to verify that a label does exist.  If not, LABEL-CREATE
+may be used to create a label.
+
+
+\item NOLBL Symbolic Name: NO\_SYSTEM\_LABEL
+
+[VIC2-NOLBL] No system label; check file contents
+
+Explanation:
+
+The system label could not be found.  Either the file is
+unlabeled, or the label is corrupted.
+
+User action:
+
+Use the program LABEL to create a label for the file.
+
+
+\item NOMEM Symbolic Name: NO\_MEMORY\_FOR\_LABEL\_PROCESS
+
+[VIC2-NOMEM] No memory for label process; consult system programmer
+
+Explanation:
+
+Memory required for label processing is dynamically allocated.
+There is insufficient memory for operation.
+
+User action:
+
+This is a system error which probably indicates a memory quota
+was exceeded.  See the system manager or system programmer to
+determine the exact cause and perhaps increase the amount of
+memory available.
+
+
+\item NONASC Symbolic Name: STRING\_HAS\_NON\_ASCII\_CHARS
+
+[VIC2-NONASC] String has non-ASCII characters
+
+Explanation:
+
+A string was passed to the indicated routine which contained
+characters which are not valid ASCII characters.  This generally
+indicates a program error.
+
+User action:
+
+The contents of the string should be checked.  Please consult
+the cognizant programmer.
+
+Programmer action:
+
+Use the debugger or a print statement to determine what the
+indicated string contains.
+
+
+\item NONSEQWRIT Symbolic Name: NON\_SEQUENTIAL\_WRITE
+
+[VIC2-NONSEQWRIT] A non-sequential write was attempted on a sequential-only device
+
+Explanation:
+
+Some devices, such as tapes, only allow sequential access on
+writes.  The program attempted to either back up and re-write
+a record or write only part of a record to a file on a
+sequential device.
+
+User action:
+
+If the program requires a file, use a disk or memory file.
+If the problem is not obvious consult the cognizant programmer.
+
+
+\item NOSCHPROP Symbolic Name: NO\_SUCH\_PROPERTY
+
+[VIC2-NOSCHPROP] No such property in label
+
+Explanation:
+
+The requested property set was not in the property label of the image file.
+This could be either a program or user error.
+
+User action:
+
+Use ``LABEL-LIST 'PROPERTY'' on the image file to determine the properties
+contained in the label.  If a property name is being given on the
+command line, check the detailed help for the program being used to
+verify that the correct syntax is being used.  If the problem is
+still not evident, consult the cognizant programmer.
+
+
+\item NOSCHTSK Symbolic Name: NO\_SUCH\_TASK
+
+[VIC2-NOSCHTSK] No such task in label
+
+Explanation:
+
+The requested task was not in the history label of the image file.
+This could be either a program or user error.
+
+User action:
+
+Use ``LABEL-LIST 'TASK'' on the image file to determine the tasks
+contained in the label.  If a task name is being given on the
+command line, check the detailed help for the program being used to
+verify that the correct syntax is being used.  If the problem is
+still not evident, consult the cognizant programmer.
+
+
+\item NOSCHUN Symbolic Name: NO\_SUCH\_UNIT
+
+[VIC2-NOSCHUN] No such unit; probable error in unit number
+
+Explanation:
+
+An action was requested on a nonexistent unit.
+
+User action:
+
+This is normally a program error, so consult the cognizant programmer.
+
+Programmer action:
+
+Verify that the unit number being used is valid.  This error
+generally indicates that the program failed to call XVUNIT before
+using a unit number, or that the variable which contains the unit
+number has been inadvertantly written over.
+
+
+\item NOTAE Symbolic Name: NO\_TAE\_SUPPORT
+
+[VIC2-NOTAE] TAE is not supported in this build of the RTL
+
+Explanation:
+
+The VICAR Run-Time Library may be built without support for
+TAE (Transportable Applications Executive) if desired.  This
+error indicates that a function requiring TAE was attempted
+when the support for TAE is not included in the build of the
+RTL currently being used.
+
+User action:
+
+Use a different version of VICAR that is built with TAE support,
+if available.  If not, consult your system manager about installing
+TAE and rebuilding the RTL to use TAE.
+
+
+\item NOTAPE Symbolic Name: NO\_TAPE\_SUPPORT
+
+[VIC2-NOTAPE] Tapes are not supported in this build of the RTL
+
+Explanation:
+
+The VICAR Run-Time Library may be built without tape support
+if desired.  This error indicates that a tape function was
+attempted when the support for tapes is not included in the
+build of the RTL currently being used.
+
+User action:
+
+Use a different version of VICAR that is built with tape support,
+if available.  If not, consult your system manager about rebuilding
+the RTL with tape support, if tape drives are available on the
+system being used.  Note that use of tapes requires the use of TAE.
+
+
+\item NOTASK Symbolic Name: NO\_TASKS\_IN\_LABEL
+
+[VIC2-NOTASK] No tasks in label; check file contents or create new label
+
+Explanation:
+
+The history label of the indicated file does not contain any
+history subsets, denoted by the TASK keyword.  This situation
+is usually caused by the user deleting the history label.
+
+User action:
+
+Use the program LABEL or the DCL DUMP facility to examine the
+label of the image file in question.  If the label contains
+any non-empty TASK keywords, there is probably an executive
+bug, so consult the system programmer.  If not, and a history
+label is desired, use LABEL-REMOVE to remove the system
+label, and LABEL-CREATE to create a new one.
+
+
+\item NOTAVAIL Symbolic Name: NOT\_IMPLEMENTED
+
+[VIC2-NOTAVAIL] Function is not yet implemented;  Program error.
+
+Explanation:
+
+The indicated routine was called with an optional argument which,
+although listed in the programmer's reference manual, has not
+yet been implemented.
+
+User Action:
+
+This indicates a program error, so consult the cognizant programmer.
+
+Programmer Action:
+
+Find another way to accomplish the same function if possible.
+If the function is not indicated as being unimplemented in the
+VICAR RTL programmer reference manual, inform MIPL of the problem.
+
+
+\item NOTERM Symbolic Name: NO\_IO\_TO\_TERMINAL
+
+[VIC2-NOTERM] Terminal not allowed for file name, use another name
+
+Explanation:
+
+The terminal is not allowed for I/O operations.  The file name
+given to a program points to the user's terminal (for example
+the logical name TT).  Data can not be written to the terminal.
+This error occurs under VMS only.
+
+User action:
+
+Use another file name.
+
+
+\item NOTMOUNTED Symbolic Name: DEVICE\_NOT\_MOUNTED
+
+[VIC2-NOTMOUNTED] A file open was attempted on a tape device that is not mounted
+
+Explanation:
+
+Magnetic tape devices must be mounted prior to use with the
+MOUNT command.
+
+User action:
+
+Mount the tape with the MOUNT command, and try opening
+the file again.
+
+
+\item NOTMULT Symbolic Name: BUF\_NOT\_MULT\_OF\_REC
+
+[VIC2-NOTMULT] Tape blocksize is not an integral number of records
+
+Explanation:
+
+For a tape which is being blocked, the block size for the tape (usually
+given by BLOCKING in the mount command) is not an integral number of records.
+This case is not allowed because it makes reading the tape difficult and puts
+data in a non-standard format.  A second possibility is that the record size
+is greater than 65,534 bytes.  If this is the case, you must default the
+block size on the mount, and you must not use the NOBLOCK option in the
+XVOPEN call, or you will get this error.
+
+User action:
+
+Verify that block size you gave on the MOUNT command is an integral number
+of records.  The record size for a band-sequential (BSQ) or band-interleaved
+by line (BIL) image is NS * (bytes per pixel), and for a band interleaved by
+pixel (BIP) image is NB * (bytes per pixel).  If your record size is greater
+than 65,534 bytes, then do not specify the block size on the MOUNT command,
+and do not use the NOBLOCK option from XVOPEN.
+
+
+\item NOTOPN Symbolic Name: FILE\_NOT\_OPEN
+
+[VIC2-NOTOPN] File not open; program error
+
+Explanation:
+
+The indicated routine tried to operate on an unopened file.
+
+User action:
+
+This indicates a program error.  See the cognizant programmer.
+
+Programmer action:
+
+Make sure that XVOPEN is called prior to the indicated operation.
+If so, make sure that the program checks the status of the open.
+The status checking can be achieved automatically with the
+OPEN\_ACT option in XVOPEN or via the routine XVEACTION.
+
+
+\item NOTPARMFILE Symbolic Name: NOT\_PARAMETER\_FILE
+
+[VIC2-NOTPARMFILE] File specified in PARMS is not a parameter file
+
+Explanation:
+
+The file given with PARMS must be a parameter file created by
+another program with XVPOPEN, XVPOUT, etc., and not an image file.
+
+User action:
+
+Check that the filename you gave is correct.  If it is, then
+consult the cognizant programmer for the program that created the file.
+
+Programmer action:
+
+Parameter files must be created using XVPOPEN, XVPOUT,
+and XVPCLOSE, and must have a file type of ``PARAM'', ``PARM'',
+or ``PARMS''.  Normal image files cannot be used as parameter files.
+
+
+\item NULLREQ Symbolic Name: NULL\_REQUEST
+
+[VIC2-NULLREQ] Null request; program error
+
+Explanation:
+
+The NHIST argument passed to the routine XLHINFO or XLPINFO is either
+zero or negative.  No information is being requested.
+
+User action:
+
+The value of the argument passed to the indicated routine must be
+checked. Please consult the cognizant programmer.
+
+Programmer action:
+
+Check the argument NHIST being passed to the routine XLHINFO or XLPINFO.
+
+
+\item ODDOPT Symbolic Name: ODD\_NUMBER\_OF\_OPTIONALS
+
+[VIC2-ODDOPT] Unpaired optionals; program error
+
+Explanation:
+
+The number of optional arguments to the indicated routine is odd.
+Since the optional arguments are given in pairs as KEYWORD, VALUE,
+an odd number is not allowed.
+
+User action:
+
+Please consult the cognizant programmer to check that the
+calling sequence is valid.
+
+Programmer action:
+
+Check the indicated routine call and verify that the calling
+sequence is legitimate.
+
+
+\item OPNINP Symbolic Name: UNABLE\_TO\_OPEN\_PRIMARY\_INPUT
+
+[VIC2-OPNINP] Unable to open primary input; check file specification
+
+Explanation:
+
+In the course of opening a file other that the primary input,
+an attempt was made to open the primary input to get
+label/control information, which failed.
+
+User action:
+
+Check the file specification of the primary input.  Also, if it is
+on tape, make sure that it is not on the same tape as the output
+file which is being processed.
+
+
+\item ORGMSMTCH Symbolic Name: ORG\_MISMATCH
+
+[VIC2-ORGMSMTCH] File organization is not that required by this program
+
+Explanation:
+
+The program being used requires a specific file organization
+(``BSQ'', ``BIL'', or ``BIP''), and the image file in question
+is not in that organization.
+
+User Action:
+
+Check the documentation of the program in question to find out
+what organization the file should be in, and convert the file
+to the proper organization.
+
+Programmer Action:
+
+Make the program flexible enough to handle any organization.
+
+
+\item PARBLKERR Symbolic Name: PARBLK\_ERROR
+
+[VIC2-PARBLKERR] Internal error in GET\_PARM
+
+Explanation:
+
+An invalid type was found in a variable in the parblock
+passed from TAE.
+
+User action:
+
+Notify the VICAR system programmer.
+
+Programmer action:
+
+The VARIABLE structure for the parameter requested in a call
+to GET\_PARM had an invalid type.  It was not V\_INTEGER, V\_REAL,
+or V\_STRING.  Check the parblock passed from TAE for vailidity.
+
+
+\item PARMVERS Symbolic Name: PARM\_FILE\_VERSION
+
+[VIC2-PARMVERS] Unrecognized version number in PARMS file
+
+Explanation:
+
+An unrecognized version number was found in the PARMS file,
+usually indicating a new format not supported in the version
+of VICAR being used.
+
+User action:
+
+Use a newer version of VICAR that supports the format of the
+PARMS file, or regenerate the PARMS file using the same version
+of VICAR being used to read the file.  If the same version is
+being used for creating and reading the PARMS file, and the error
+still occurs, then consult the VICAR executive programmer.
+
+
+\item PARNOTFND Symbolic Name: PARAM\_NOT\_FOUND
+
+[VIC2-PARNOTFND] A program parameter was not found in the PDF
+
+Explanation:
+
+A call to XVPARM or a related routine requested a parameter
+that is not in the PDF.
+
+User action:
+
+This is a program error.  Consult the cognizant programmer.
+
+Programmer action:
+
+A parameter or a parameter qualifier in an XVPARM call (or
+another parameter routine such as XVP) was not found in the
+parblock passed to the program from TAE.  Check both the XVPARM
+call and the PDF to make sure the parameter exists in both
+places and that the spellings match.
+
+
+\item PROPREQ Symbolic Name: PROPERTY\_OPTIONAL\_REQUIRED
+
+[VIC2-PROPREQ] The PROPERTY optional is required for property label routines
+
+Explanation:
+
+The PROPERTY optional to XLADD, XLDEL, XLGET, and XLINFO cannot be
+defaulted if the routine is processing PROPERTY labels.
+
+User action:
+
+Consult the cognizant programmer.
+
+Programmer action:
+
+Enter the desired PROPERTY on the label routine call.
+
+
+\item SECDEL Symbolic Name: CANNOT\_DELETE\_SECTION
+
+[VIC2-SECDEL] Unable to free array file, consult system programmer
+
+Explanation:
+
+The area of memory allocated for an array file, called
+a mapped section, cannot be deleted.
+
+User action:
+
+This is a system error.  Consult the cognizant programmer
+for the VICAR executive.
+
+
+\item SIZREQ Symbolic Name: IMAGE\_SIZE\_REQUIRED
+
+[VIC2-SIZREQ] Image size required; re-enter command
+
+Explanation:
+
+XVOPEN was asked to process a file with incomplete information,
+such as creating an output file where no primary input file is
+present and no size information was supplied by the user or program.
+
+User action:
+
+Use the size field (if available) to work around the problem, and
+notify the cognizant programmer of the failure of the program to
+either calculate the size or require its input.
+
+
+\item STOROPT Symbolic Name: UNABLE\_TO\_STORE\_OPTIONAL
+
+[VIC2-STOROPT] Unable to store optional; consult system programmer
+
+Explanation:
+
+An internal error occurred, preventing the storage
+of an optional argument to the routine indicated.
+
+User action:
+
+This error probably indicates an internal error, usually due
+to insufficient memory.  Please consult the system programmer.
+
+
+\item STRTREC Symbolic Name: START\_REC\_ERROR
+
+[VIC2-STRTREC] Bad starting record for read or write operation; program error.
+
+Explanation:
+
+The starting record for a read or write operation, given by the LINE,
+BAND, or SAMP optional arguments, is only partially specified.  This
+condition arises when an image file has a third dimension which is
+greater than one unit in size (for example, a band-sequential image
+with more than one band), and the starting value in either the second
+or third dimension was defaulted (for example, you have a band-sequential
+image and you specify BAND but not LINE).  The error condition was
+raised because the record being requested is ambiguous.
+
+User Action:
+
+This is a program error.  Notify the cognizant programmer.
+
+Programmer Action:
+
+Either completely specify the record in the call to XVREAD or XVWRIT
+(for band-sequential images, give both LINE and BAND), or completely
+default it (give neither).
+
+
+\item TAPMETH Symbolic Name: ILLEGAL\_TAPE\_METHOD
+
+[VIC2-TAPMETH] Tape cannot be opened for random access.
+
+Explanation:
+
+An attempt has been made to open a tape file for random access.
+
+User action:
+
+If the program requires a file, use a disk or memory file.
+If the problem is not obvious consult the cognizant programmer.
+
+
+\item TAPOPR Symbolic Name: ILLEGAL\_TAPE\_OPERATION
+
+[VIC2-TAPOPR] Tape cannot be opened for update.
+
+Explanation:
+
+An attempt has been made to open a tape file for update.
+
+User action:
+
+If the program requires a file, use a disk or memory file.
+If the problem is not obvious consult the cognizant programmer.
+
+
+\item TAPPOS Symbolic Name: TAPE\_POSITIONING\_ERROR
+
+[VIC2-TAPPOS] Tape positioning error; check drive status
+
+Explanation:
+
+Bad device status. Failed to position tape.
+
+User action:
+
+Check to see that the tape drive is functioning properly.
+
+
+\item TOOBIG Symbolic Name: FILE\_TOO\_BIG
+
+[VIC2-TOOBIG] File too big for this version of VICAR
+
+Explanation:
+
+The file size is too big for this version of VICAR.  Some operating
+systems limit files to 2GB; others have no such limit.  One of three
+cases might have occurred:
+
+* The file is > 2 GB and such files are not supported on this OS/VICAR version
+* The record size (NL*NB+NBB for BSQ files) is > 2 GB (on any platform)
+* The file is > 2 GB and array I/O was attempted (on any platform)
+
+User action:
+
+For the first case, reduce the file size or move to an OS that supports
+large files.  For the second, reduce the record size (records > 2 GB are
+not supported on any platform).  For the third, avoid using array I/O
+(array I/O can never exceed 2 GB on any platform).
+
+
+\item TOOLATE Symbolic Name: TOO\_LATE
+
+[VIC2-TOOLATE] Attempt to modify tape label after write; program error
+
+Explanation:
+
+Occurs when label processing to a tape file is attempted after
+the first I/O to that file.  Due to the sequential nature of the
+tape device, once a record is read or written to a tape file, the
+labels may not be read or modified.
+
+User action:
+
+Program may require file to be on disk.  Write desired file to disk.
+If the problem is still not obvious consult the cognizant programmer.
+
+
+\item TRUNCNAME Symbolic Name: NAME\_TRUNCATED
+
+[VIC2-TRUNCNAME] A filename was truncated due to insufficient buffer space
+
+Explanation:
+
+The name returned by x/zvfilename was too big for the caller-supplied
+buffer.  The name has been truncated to fit.
+
+User action:
+
+Try to use a shorter filename (including directory path), and contact
+the cognizant programmer.
+
+Programmer action:
+
+Provide a larger buffer to the x/zvfilename call.
+
+
+\item UNCLSBRC Symbolic Name: UNCLOSED\_BRACES
+
+[VIC2-UNCLSBRC] A closing brace was not found in a filename
+
+Explanation:
+
+Filenames in Unix may include references to environment variables by
+preceding the environment variable with a dollar sign ($).  The variable
+name may optionally be in {braces}.  This error indicates that an
+opening brace was found for an environment variable but no closing
+brace was present.
+
+User action:
+
+Check the given filename to make sure that a closing brace exists
+if you used an opening brace.
+
+
+\item UNDEFENV Symbolic Name: UNDEF\_ENV\_VAR
+
+[VIC2-UNDEFENV] Undefined environment variable in filename
+
+Explanation:
+
+Filenames in Unix may include references to environment variables by
+preceding the environment variable with a dollar sign ($).  The variable
+name may optionally be in {braces}.  This error indicates that the
+referenced environment variable is not defined.  This error may also
+occur if the user's home directory was specified via a tilde (~) with
+no username, and the $HOME environment variable is not defined.
+
+User action:
+
+Check the given filename to make sure the environment variable was
+spelled correctly, and do a "printenv" from the shell to make sure
+the variable is defined.
+
+
+\item UNDEFOPT Symbolic Name: UNDEFINED\_OPTIONAL
+
+[VIC2-UNDEFOPT] Undefined optional argument; program error
+
+Undefined optional.
+
+Explanation:
+
+An optional argument given to a VICAR run-time library routine
+is not recognized as a valid optional argument.
+
+User action:
+
+This error is usually a program error and the cognizant
+programmer should be notified.
+
+Programmer action:
+
+Check the Run-Time Library reference manual to determine what
+optional parameters are allowed for the subroutine call in question,
+or notify the system programmer.
+
+
+\item UNDEFUSR Symbolic Name: UNDEF\_USER\_NAME
+
+[VIC2-UNDEFUSR] Undefined user name in filename
+
+Explanation:
+
+Filenames in Unix may include references to the home directories
+of other users by starting the filename with a tilde (~) followed
+by the user name.  This error indicates that the referenced user name
+is not present on the system.
+
+User action:
+
+Check the given filename to make sure the user name was spelled
+correctly, and that the user does actually exist.
+
+
+\item UNSBINCMP Symbolic Name: UNSUPPORTED\_BIN\_HDR\_OR\_PREFIX\_BY\_COMPRESSION
+
+[VIC2-UNSBINCMP] unsupported binary header or prefix for compression
+
+Explanation:
+
+The file contains binary data which is not supported by compression.
+
+User action:
+
+The compression type being used does not handle binary data.
+
+Programmer action:
+
+There's no easy way to really handle binary data on compression
+without innately modifying the compression algorithm.
+
+
+\item UNSDEVCMP Symbolic Name: UNSUPPORTED\_DEVICE\_BY\_COMPRESSION
+
+[VIC2-UNSDEVCMP] unsupported device for compression
+
+Explanation:
+
+The device type is not supported by this compression.  Normally,
+a disk device type is required.
+
+User action:
+
+If the file is compressed and needs to be processed on tape,
+or a non-disc device, uncompress first then continue with
+processing.
+
+Programmer action:
+
+Unexpected errors may be encountered if compression is utilized
+on non-disk devices.
+
+
+\item UNSFMTCMP Symbolic Name: UNSUPPORTED\_FMT\_BY\_COMPRESSION
+
+[VIC2-UNSFMTCMP] unsupported format type for compression
+
+Explanation:
+
+The file format is not supported by the specified compression.
+
+User action:
+
+Use a different compression type or check to see that the file has
+a correct format.
+
+Programmer action:
+
+Make sure the file format is correct.  If it is, the compression
+may not have been implemented correctly.
+
+
+\item UNSOPCMP Symbolic Name: UNSUPPORTED\_OPTION\_BY\_COMPRESSION
+
+[VIC2-UNSOPCMP] unsupported option for compression
+
+Explanation:
+
+The file option is not supported by the specified compression.
+
+User action:
+
+Use a different compression type or check to see that the file has
+the correct option.
+
+Programmer action:
+
+Make sure the file option is correct.  Make sure the compression
+type supports that file option.  If it is, the compression
+may not have been implemented correctly.
+
+
+\item UNSORGCMP Symbolic Name: UNSUPPORTED\_ORG\_BY\_COMPRESSION
+
+[VIC2-UNSORGCMP] unsupported org type for compression
+
+Explanation:
+
+The org format is not supported by the specified compression.
+
+User action:
+
+Use a different compression type or check to see that the file has
+the correct org.
+
+Programmer action:
+
+Make sure the file org is correct.  If it is, the compression
+may not have been implemented correctly.
+
+
+\item UNSTYPCMP Symbolic Name: UNSUPPORTED\_FILE\_TYPE\_BY\_COMPRESSION
+
+[VIC2-UNSTYPCMP] unsupported file type for compression
+
+Explanation:
+
+The file type (i.e IBIS) is not supported by this compression.
+
+User action:
+
+Make sure the file type is one that is supported by the compression.
+
+Programmer action:
+
+Look in the function that is called by compress\_preprocess 
+function.  Make sure the compression type is able to handle
+the file type.
+
+\item VARREC Symbolic Name: VARREC\_ERROR
+
+[VIC2-VARREC] COND=VARREC must have NOLABELS, NOBLOCK and tape
+
+Explanation:
+
+If the ``VARREC'' option is given to COND, then ``NOLABELS'',
+``NOBLOCK'', and a tape file must be specified as well.
+
+User action:
+
+Make sure the input file is on tape.  If it is, then this is
+a program error.  Please consult the cognizant programmer.
+
+Programmer action:
+
+If ``VARREC'' is specified, verify that ``NOLABELS'',
+``NOBLOCK'', and a tape file are also specified.
+
+
+\item WAITFL Symbolic Name: IO\_WAIT\_FAIL
+
+[VIC2-WAITFL] I/O wait fail; consult system programmer
+
+Explanation:
+
+I/O wait fail.  A wait for asynchronous I/O returned a bad status.
+
+User action:
+
+This is an executive error and the system programmer
+should be notified.
+
+
+\item XVCMDERR Symbolic Name: XVCOMMAND\_ERROR
+
+[VIC2-XVCMDERR] Internal error in XVCOMMAND
+
+Explanation:
+
+An internal error occurred in XVCOMMAND having to do with
+message-passing to the TAE host.  Either the PARBLK could
+not be built, or it could not be sent or received.
+
+User action:
+
+Notify the VICAR system programmer.
+
+
+\item XVCMDFAIL Symbolic Name: XVCOMMAND\_FAIL
+
+[VIC2-XVCMDFAIL] The command submitted via XVCOMMAND had an error
+
+Explanation:
+
+The command submitted with a call to XVCOMMAND returned
+an error status.
+
+User action:
+
+This is most likely a program error.  Make sure your inputs
+to the program were correct, then notify the cognizant
+programmer.
+
+Programmer action:
+
+Check the command submitted with XVCOMMAND.  Only intrinsic
+commands and procedures using intrinsic commands may be
+used with XVCOMMAND, i.e. no processes or DCL commands.
+The failure may be a syntax error, an error in the
+parameters, or an execution error.  The command should
+have printed an error message; use this to find the
+problem.
+
+\end{enumerate}
+
+\subsection{Messages by numerical value}
+For easy reference, the VICAR2 error messages are listed here in
+their numerical order, giving the key associated with the value, and
+the symbolic name which may be used to reference it in a program.
+The detailed help for each message may be found in the previous
+section under the key name.
+\begin{itemize}
+\item -2 Key: UNDEFOPT \\
+Symbolic Name: UNDEFINED\_OPTIONAL
+\item -3 Key: NOFREUN \\
+Symbolic Name: NO\_FREE\_UNITS
+\item -4 Key: INSUFMEM \\
+Symbolic Name: INSUFFICIENT\_MEMORY
+\item -5 Key: STOROPT \\
+Symbolic Name: UNABLE\_TO\_STORE\_OPTIONAL
+\item -6 Key: NOSCHUN \\
+Symbolic Name: NO\_SUCH\_UNIT
+\item -7 Key: MODOPNUN \\
+Symbolic Name: CANNOT\_MOD\_OPEN\_UNIT
+\item -8 Key: NONASC \\
+Symbolic Name: STRING\_HAS\_NON\_ASCII\_CHARS
+\item -9 Key: BADSIZ \\
+Symbolic Name: IMPROPER\_IMAGE\_SIZE\_PARAM
+\item -10 Key: BADMETH \\
+Symbolic Name: IMPROPER\_METHOD\_STRING
+\item -11 Key: BADOPSTR \\
+Symbolic Name: IMPROPER\_OP\_STRING
+\item -12 Key: BADFOR \\
+Symbolic Name: IMPROPER\_FORMAT\_STRING
+\item -13 Key: ODDOPT \\
+Symbolic Name: ODD\_NUMBER\_OF\_OPTIONALS
+\item -14 Key: ALROPN \\
+Symbolic Name: FILE\_IS\_ALREADY\_OPEN
+\item -15 Key: BADNAM \\
+Symbolic Name: BAD\_FILE\_PARAM\_NAME
+\item -16 Key: NOTERM \\
+Symbolic Name: NO\_IO\_TO\_TERMINAL
+\item -17 Key: SIZREQ \\
+Symbolic Name: IMAGE\_SIZE\_REQUIRED
+\item -18 Key: BADDIM \\
+Symbolic Name: IMPROPER\_DIMENSION
+\item -19 Key: NOARRAY \\
+Symbolic Name: ARRAY\_IO\_NOT\_ALLOWED
+\item -20 Key: SECDEL \\
+Symbolic Name: CANNOT\_DELETE\_SECTION
+\item -21 Key: WAITFL \\
+Symbolic Name: IO\_WAIT\_FAIL
+\item -22 Key: BUG \\
+Symbolic Name: INTERNAL\_ERROR
+\item -23 Key: NOEFLG \\
+Symbolic Name: UNABLE\_TO\_ACQUIRE\_AN\_EVENT\_FLAG
+\item -24 Key: BADCVT \\
+Symbolic Name: IMPROPER\_CONVERT\_SETTING
+\item -25 Key: NOTOPN \\
+Symbolic Name: FILE\_NOT\_OPEN
+\item -26 Key: BADPARINST \\
+Symbolic Name: BAD\_PARAM\_INSTANCE
+\item -27 Key: NOTAVAIL \\
+Symbolic Name: NOT\_IMPLEMENTED
+\item -28 Key: BADORG \\
+Symbolic Name: BAD\_ORG
+\item -29 Key: BADLBL \\
+Symbolic Name: BAD\_INPUT\_LABEL
+\item -30 Key: EOF \\
+Symbolic Name: END\_OF\_FILE
+\item -31 Key: OPNINP \\
+Symbolic Name: UNABLE\_TO\_OPEN\_PRIMARY\_INPUT
+\item -32 Key: BADINTFMT \\
+Symbolic Name: IMPROPER\_INTFMT
+\item -33 Key: BADOPR \\
+Symbolic Name: IMPROPER\_OPERATION
+\item -34 Key: HSTNTASC \\
+Symbolic Name: HIST\_NAME\_HAS\_NON\_ASCII\_CHAR
+\item -35 Key: BADHOST \\
+Symbolic Name: INVALID\_HOST
+\item -36 Key: BADREALFMT \\
+Symbolic Name: IMPROPER\_REALFMT
+\item -37 Key: NOTASK \\
+Symbolic Name: NO\_TASKS\_IN\_LABEL
+\item -38 Key: FNDKEY \\
+Symbolic Name: CANNOT\_FIND\_KEY
+\item -39 Key: BADLBLTP \\
+Symbolic Name: BAD\_LABEL\_TYPE
+\item -40 Key: ORGMSMTCH \\
+Symbolic Name: ORG\_MISMATCH
+\item -41 Key: LNGMESS \\
+Symbolic Name: ERR\_MESS\_TOO\_LONG
+\item -42 Key: NOMEM \\
+Symbolic Name: NO\_MEMORY\_FOR\_LABEL\_PROCESS
+\item -43 Key: STRTREC \\
+Symbolic Name: START\_REC\_ERROR
+\item -44 Key: NOSCHTSK \\
+Symbolic Name: NO\_SUCH\_TASK
+\item -45 Key: NOKEY \\
+Symbolic Name: NO\_SUCH\_KEY
+\item -46 Key: NOLBL \\
+Symbolic Name: NO\_SYSTEM\_LABEL
+\item -47 Key: BADINST \\
+Symbolic Name: ILLEGAL\_INSTANCE
+\item -48 Key: ILLFOREQ \\
+Symbolic Name: ILLEGAL\_FORMAT\_REQUEST
+\item -49 Key: CONVERR \\
+Symbolic Name: CONVERSION\_ERROR
+\item -50 Key: HOSTLONG \\
+Symbolic Name: HOST\_TOO\_LONG
+\item -51 Key: BADLINST \\
+Symbolic Name: IMPROPER\_LABEL\_INSTANCE
+\item -52 Key: MODINPLBL \\
+Symbolic Name: CAN\_NOT\_MODIFY\_AN\_INPUT\_LABEL
+\item -53 Key: BADLEN \\
+Symbolic Name: IMPROPER\_LENGTH
+\item -54 Key: BADSAMP \\
+Symbolic Name: IMPROPER\_SAMP\_SIZE\_PARAM
+\item -55 Key: BADLINE \\
+Symbolic Name: IMPROPER\_LINE\_SIZE\_PARAM
+\item -56 Key: NULLREQ \\
+Symbolic Name: NULL\_REQUEST
+\item -57 Key: EOLAB \\
+Symbolic Name: END\_OF\_LABEL
+\item -58 Key: TAPOPR \\
+Symbolic Name: ILLEGAL\_TAPE\_OPERATION
+\item -59 Key: TAPMETH \\
+Symbolic Name: ILLEGAL\_TAPE\_METHOD
+\item -60 Key: BADBAND \\
+Symbolic Name: IMPROPER\_BAND\_SIZE\_PARAM
+\item -61 Key: TAPPOS \\
+Symbolic Name: TAPE\_POSITIONING\_ERROR
+\item -62 Key: PARMVERS \\
+Symbolic Name: PARM\_FILE\_VERSION
+\item -63 Key: TOOLATE \\
+Symbolic Name: TOO\_LATE
+\item -64 Key: NOLAB \\
+Symbolic Name: FILE\_HAS\_NO\_LABEL
+\item -65 Key: DUPKEY \\
+Symbolic Name: DUPLICATE\_KEY
+\item -66 Key: BADBINSIZ \\
+Symbolic Name: IMPROPER\_BINARY\_SIZE\_PARAM
+\item -67 Key: LNGCOND \\
+Symbolic Name: COND\_STRING\_TOO\_LONG
+\item -68 Key: LNGACT \\
+Symbolic Name: ACT\_STRING\_TOO\_LONG
+\item -69 Key: ERRACT \\
+Symbolic Name: BAD\_ERR\_ACT\_VALUE
+\item -70 Key: BADELEM \\
+Symbolic Name: IMPROPER\_ELEMENT\_NUMBER
+\item -71 Key: FORREQ \\
+Symbolic Name: FORMAT\_OPTIONAL\_REQUIRED
+\item -72 Key: VARREC \\
+Symbolic Name: VARREC\_ERROR
+\item -73 Key: BADFILE \\
+Symbolic Name: IMPROPER\_FILE\_NUMBER
+\item -74 Key: NOTMULT \\
+Symbolic Name: BUF\_NOT\_MULT\_OF\_REC
+\item -75 Key: ENDOFVOL \\
+Symbolic Name: END\_OF\_VOLUME
+\item -76 Key: NOTAPE \\
+Symbolic Name: NO\_TAPE\_SUPPORT
+\item -77 Key: NOTPARMFILE \\
+Symbolic Name: NOT\_PARAMETER\_FILE
+\item -78 Key: MULTPARMFILE \\
+Symbolic Name: MULTIPLE\_PARAMETER\_FILES
+\item -79 Key: FILETYPE \\
+Symbolic Name: BAD\_FILE\_TYPE
+\item -80 Key: BADTRANS \\
+Symbolic Name: INVALID\_FORMAT\_TRANSLATION
+\item -81 Key: NOTAE \\
+Symbolic Name: NO\_TAE\_SUPPORT
+\item -82 Key: NONSEQWRIT \\
+Symbolic Name: NON\_SEQUENTIAL\_WRITE
+\item -83 Key: NOTMOUNTED \\
+Symbolic Name: DEVICE\_NOT\_MOUNTED
+\item -84 Key: XVCMDERR \\
+Symbolic Name: XVCOMMAND\_ERROR
+\item -85 Key: XVCMDFAIL \\
+Symbolic Name: XVCOMMAND\_FAIL
+\item -86 Key: PARNOTFND \\
+Symbolic Name: PARAM\_NOT\_FOUND
+\item -87 Key: BLTYPELONG \\
+Symbolic Name: BLTYPE\_TOO\_LONG
+\item -88 Key: PARBLKERR \\
+Symbolic Name: PARBLK\_ERROR
+\item -89 Key: BADMODESTR \\
+Symbolic Name: IMPROPER\_MODE\_STRING
+\item -90 Key: NOSCHPROP \\
+Symbolic Name: NO\_SUCH\_PROPERTY
+\item -91 Key: PROPREQ \\
+Symbolic Name: PROPERTY\_OPTIONAL\_REQUIRED
+\item -92 Key: UNDEFENV \\
+Symbolic Name: UNDEF\_ENV\_VAR
+\item -93 Key: UNDEFUSR \\
+Symbolic Name: UNDEF\_USER\_NAME
+\item -94 Key: UNCLSBRC \\
+Symbolic Name: UNCLOSED\_BRACES
+\item -95 Key: TRUNCNAME \\
+Symbolic Name: NAME\_TRUNCATED
+\item -96 Key: BADUPDHIST \\
+Symbolic Name: IMPROPER\_UPD\_HIST\_SETTING
+\item -97 Key: TOOBIG \\
+Symbolic Name: FILE\_TOO\_BIG
+\item -98 Key: INVCMPR \\
+Symbolic Name: INVALID\_COMPRESSION\_TYPE
+\item -99 Key: UNSFMTCMP \\
+Symbolic Name: UNSUPPORTED\_FMT\_BY\_COMPRESSION
+\item -100 Key: UNSORGCMP \\
+Symbolic Name: UNSUPPORTED\_ORG\_BY\_COMPRESSION
+\item -101 Key: UNSOPCMP \\
+Symbolic Name: UNSUPPORTED\_OPTION\_BY\_COMPRESSION
+\item -102 Key: UNSDEVCMP \\
+Symbolic Name: UNSUPPORTED\_DEVICE\_BY\_COMPRESSION
+\item -103 Key: UNSBINCMP \\
+Symbolic Name: UNSUPPORTED\_BIN\_HDR\_OR\_PREFIX\_BY\_COMPRESSION
+\item -104 Key: UNSTYPCMP \\
+Symbolic Name: UNSUPPORTED\_FILE\_TYPE\_BY\_COMPRESSION
+\end{itemize}
+\end{document}

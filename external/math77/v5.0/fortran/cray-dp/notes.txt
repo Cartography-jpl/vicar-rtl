@@ -1,0 +1,7 @@
+To make a version of DINT for use on the CRAY in conjunction with
+program units compiled with the "-dp" option, copy SINT* to a
+separate directory, rename SINT*.* to DINT*.*, edit everything to
+change SINT to DINT (except in comments).  Make sure KWORK is NOT
+changed in ?INTMA.  Make sure NOT to clobber stuff in the non-CRAY
+directory with the new stuff.
+

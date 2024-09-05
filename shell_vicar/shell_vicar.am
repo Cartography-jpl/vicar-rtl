@@ -1,0 +1,26 @@
+# We install this in the normally library place
+
+noinst_LTLIBRARIES += libshvic.la
+
+libshvic_la_SOURCES = 
+
+# Make sure to pick local include files, rather than ones found in tae.
+libshvic_la_CPPFLAGS = -I$(srcdir)/$(shvicinc) $(AM_CPPFLAGS)
+libshvic_la_CPPFLAGS += -I$(srcdir)/$(taeinc) -I$(srcdir)/$(rtlinc)
+
+EXTRA_DIST += @shvicinc@/tae_lib.h
+EXTRA_DIST += @shvicinc@/taeconf.inp
+EXTRA_DIST += @shvicinc@/pgminc.inc
+EXTRA_DIST += @shvicinc@/parblk.inc
+
+libshvic_la_SOURCES+= @srcshvic@/tae_debug.c
+libshvic_la_SOURCES+= @srcshvic@/tae_fortran.F
+libshvic_la_SOURCES+= @srcshvic@/tae_errors.c
+libshvic_la_SOURCES+= @srcshvic@/tae_file.c
+libshvic_la_SOURCES+= @srcshvic@/tae_parblock.c
+libshvic_la_SOURCES+= @srcshvic@/tae_parsers.c
+libshvic_la_SOURCES+= @srcshvic@/tae_subcmd.c
+libshvic_la_SOURCES+= @srcshvic@/tae_variables.c
+libshvic_la_SOURCES+= @srcshvic@/v2param_subs.c
+libshvic_la_SOURCES+= @srcshvic@/zzinit.c
+libshvic_la_SOURCES+= @srcshvic@/zzq_out.c
