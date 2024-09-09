@@ -135,7 +135,6 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = $(am__EXEEXT_1)
-
 # By default, gfortran ignores characters past column 72. Much of the fortan
 # code in this system goes past that column, so tell gfortran to allow this.
 # Starting with gfortran 10.0 type mismatch changed from a warning to
@@ -2942,7 +2941,12 @@ AM_CPPFLAGS = -I$(includedir)
 
 #=================================================================
 # Some flags needed for GCC compilers.
-@HAVE_GCC_TRUE@AM_CFLAGS = -Wall
+# The newer versions of gcc (14 or so) treat what use to be just warnings as
+# errors. Turn this off, this code is really old and we just want to compile it,
+# not worry about fixing all the old problems
+@HAVE_GCC_TRUE@AM_CFLAGS = -Wall -Wno-implicit-function-declaration \
+@HAVE_GCC_TRUE@	-Wno-implicit-int \
+@HAVE_GCC_TRUE@	-Wno-incompatible-pointer-types
 
 # hooks for installing. We collect this in one place so automake doesn't
 # complain

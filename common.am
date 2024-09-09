@@ -45,7 +45,11 @@ AM_CPPFLAGS=
 
 if HAVE_GCC
 AM_CFLAGS = -Wall
-
+# The newer versions of gcc (14 or so) treat what use to be just warnings as
+# errors. Turn this off, this code is really old and we just want to compile it,
+# not worry about fixing all the old problems
+AM_CFLAGS+= -Wno-implicit-function-declaration -Wno-implicit-int
+AM_CFLAGS+= -Wno-incompatible-pointer-types
 # By default, gfortran ignores characters past column 72. Much of the fortan
 # code in this system goes past that column, so tell gfortran to allow this.
 AM_FFLAGS+= -ffixed-line-length-none
