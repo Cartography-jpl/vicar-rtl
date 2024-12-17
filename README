@@ -1,4 +1,4 @@
-This directory contains the code to build the VICAR RTL library. 
+This directory contains the code to build the VICAR RTL library. (NPO 52175)
 
 In the original MIPL code, the libraries libp2, libp1, librtl, libshvic, and 
 libtae are separate libraries. However, they are never used except together. 
