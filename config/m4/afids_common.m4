@@ -54,7 +54,7 @@ ALL RIGHTS RESERVED. U.S. Government Sponsorship acknowledged.])
 # http://noisebleed.blogetery.com/2010/02/27/tar-file-name-is-too-long-max-99/#howtofixit
 AM_INIT_AUTOMAKE([1.9 tar-pax])
 AM_MAINTAINER_MODE
-AC_PROG_LIBTOOL
+LT_INIT
 AC_PROG_CXX
 AC_PROG_LN_S
 AC_COPY_DIR

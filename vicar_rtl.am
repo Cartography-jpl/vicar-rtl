@@ -26,7 +26,7 @@ libvicar_rtl_la_SOURCES =
 nodist_EXTRA_libvicar_rtl_la_SOURCES = dummy.cc
 
 libvicar_rtl_la_CPPFLAGS = $(AM_CPPFLAGS) $(CURSES_CFLAGS)
-libvicar_rtl_la_LDFLAGS = -version-info @VICAR_RTL_LIBARY_VERSION@
+libvicar_rtl_la_LDFLAGS = -version-info @VICAR_RTL_LIBARY_VERSION@ 
 libvicar_rtl_la_LIBADD = libp2.la libmath77.la
 libvicar_rtl_la_LIBADD+= libp1.la librtl.la libshvic.la libtae.la
 libvicar_rtl_la_LIBADD+= $(CURSES_LIBS) $(FLIBS)

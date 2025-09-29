@@ -67,10 +67,7 @@ AC_DEFUN([MP_WITH_CURSES],
    elif test "$with_ncurses" != yes; then
      AC_CACHE_CHECK([for working curses], mp_cv_curses,
        [LIBS="$LIBS -lcurses"
-        AC_TRY_LINK(
-          [#include <curses.h>],
-          [chtype a; int b=A_STANDOUT, c=KEY_LEFT; initscr(); ],
-          mp_cv_curses=yes, mp_cv_curses=no)])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <curses.h>]], [[chtype a; int b=A_STANDOUT, c=KEY_LEFT; initscr(); ]])],[mp_cv_curses=yes],[mp_cv_curses=no])])
      if test "$mp_cv_curses" = yes
      then
        AC_DEFINE([HAVE_CURSES_H],[1],[Define if you have curses.h])
@@ -81,10 +78,7 @@ AC_DEFUN([MP_WITH_CURSES],
    if test ! "$CURSES_LIBS"; then
      AC_CACHE_CHECK([for working ncurses], mp_cv_ncurses,
        [LIBS="$mp_save_LIBS -lncurses"
-        AC_TRY_LINK(
-          [#include <ncurses.h>],
-          [chtype a; int b=A_STANDOUT, c=KEY_LEFT; initscr(); ],
-          mp_cv_ncurses=yes, mp_cv_ncurses=no)])
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <ncurses.h>]], [[chtype a; int b=A_STANDOUT, c=KEY_LEFT; initscr(); ]])],[mp_cv_ncurses=yes],[mp_cv_ncurses=no])])
      if test "$mp_cv_ncurses" = yes; then
        AC_DEFINE([HAVE_NCURSES_H],[1],[Define if you have ncurses.h])
        CURSES_LIBS="-lncurses"
